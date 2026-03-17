@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Models\Lesson;
 use App\Models\LessonPackage;
+use App\Models\Payment;
 use App\Models\TurmaClass;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +29,10 @@ class GetDashboardStatsAction
             'total_classes' => TurmaClass::count(),
             'total_lessons' => Lesson::count(),
             'active_packages' => LessonPackage::active()->count(),
+            'payment_summary' => [
+                'total_revenue' => (float) Payment::sum('amount'),
+                'unpaid_count'  => LessonPackage::whereDoesntHave('payment')->count(),
+            ],
         ];
     }
 
@@ -49,6 +54,31 @@ class GetDashboardStatsAction
                 'total_lessons' => $pkg->total_lessons,
             ]);
 
+        $classPaymentStats = $user->taughtClasses()
+            ->with(['students' => function ($q) {
+                $q->with(['lessonPackages' => function ($q2) {
+                    $q2->active()->with('payment');
+                }]);
+            }])
+            ->get()
+            ->map(function ($class) {
+                $paid = 0;
+                $total = $class->students->count();
+                foreach ($class->students as $student) {
+                    $hasActivePaid = $student->lessonPackages->contains(fn ($pkg) => $pkg->payment !== null);
+                    if ($hasActivePaid) {
+                        $paid++;
+                    }
+                }
+                return [
+                    'class_id'   => $class->id,
+                    'class_name' => $class->name,
+                    'paid'       => $paid,
+                    'total'      => $total,
+                ];
+            })
+            ->toArray();
+
         return [
             'total_classes' => $user->taughtClasses()->count(),
             'total_lessons_taught' => Lesson::where('professor_id', $user->id)->count(),
@@ -58,6 +88,7 @@ class GetDashboardStatsAction
                 ->limit(5)
                 ->get(),
             'studentsNeedingPackage' => $studentsNeedingPackage,
+            'class_payment_stats' => $classPaymentStats,
         ];
     }
 
@@ -127,6 +158,18 @@ class GetDashboardStatsAction
                 'nextPaymentDue'   => $warning === 'last_lesson' || $warning === 'exhausted',
             ],
             'progress' => (new GetProgressStatsAction)->execute($user),
+            'payment_history' => $user->payments()
+                ->with('lessonPackage:id,total_lessons')
+                ->latest('paid_at')
+                ->limit(5)
+                ->get()
+                ->map(fn (Payment $p) => [
+                    'id'            => $p->id,
+                    'amount'        => (float) $p->amount,
+                    'method'        => $p->method,
+                    'paid_at'       => $p->paid_at?->format('d/m/Y'),
+                    'total_lessons' => $p->lessonPackage?->total_lessons,
+                ]),
         ];
     }
 }

@@ -20,6 +20,7 @@ class Lesson extends Model
         'conducted_at',
         'status',
         'scheduled_at',
+        'school_id',
     ];
 
     protected function casts(): array

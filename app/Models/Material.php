@@ -17,6 +17,7 @@ class Material extends Model
         'title',
         'file_path',
         'description',
+        'school_id',
     ];
 
     protected $appends = ['download_url'];

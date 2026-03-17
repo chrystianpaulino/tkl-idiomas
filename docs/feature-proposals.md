@@ -1,5 +1,28 @@
 # TKL Idiomas — Feature Proposals
 
+> **Última atualização:** 2026-03-17
+
+## 📊 Status das Features
+
+| # | Feature | Status |
+|---|---|---|
+| 1 | Class Scheduling System | ✅ Implementado |
+| 2 | Notifications | ⚠️ Tabela criada, lógica não implementada |
+| 3 | WhatsApp Integration | ❌ Não iniciado |
+| 4 | Student Progress Tracking | ✅ Implementado (`GetProgressStatsAction`) |
+| 5 | `users.phone` column | ✅ Implementado |
+| 6 | Exercise Lists / Homework | ✅ Implementado (completo) |
+| — | Multi-Tenant SaaS | 🔄 Em progresso (fundação de dados completa) |
+| — | School Management UI | ✅ Implementado (`/admin/schools`) |
+
+---
+
+*(Propostas originais abaixo — algumas já implementadas, ver status acima)*
+
+---
+
+# TKL Idiomas — Feature Proposals (original)
+
 > **Audience:** Lead developer with full codebase context.
 > **Purpose:** Concrete implementation proposals for the next development phases — schema, actions, routing, and integration details.
 > **Date:** 2026-03-13

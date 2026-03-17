@@ -36,6 +36,22 @@ HTTP request → Route middleware (`auth`, `verified`, `role:admin`) → FormReq
 
 Controllers do no business logic — they validate via FormRequest, call one Action, flash a message, and redirect or return Inertia.
 
+### Multi-Tenancy (in progress)
+
+The system is being migrated to a multi-tenant SaaS. The data foundation is complete — Global Scopes, middleware, and policy enforcement are the next steps.
+
+**Current state:**
+- `schools` table exists with `id`, `name`, `slug` (unique), `email`, `active`
+- All tenant-scoped tables now have a NOT NULL `school_id` FK: `users` (nullable — super_admin has no school), `classes`, `lesson_packages`, `lessons`, `materials`, `payments`
+- Existing data was migrated to the default school (name: "TKL Idiomas", slug: "tkl", id: 1)
+- Global Scopes are **NOT yet active** — all queries still return data across all schools
+
+**Planned roles (not yet implemented):** `super_admin` (platform), `school_admin`, `professor`, `aluno`
+
+**Next steps:** `BelongsToSchool` trait + `SchoolScope`, `SetTenantContext` middleware, role rename migration, school onboarding flow.
+
+---
+
 ### Role System
 
 Three roles: `admin`, `professor`, `aluno`. The `role` column is **intentionally excluded from `$fillable`** on `User` to prevent privilege escalation. Roles are set via direct attribute assignment in `CreateUserAction`.
@@ -61,13 +77,13 @@ All business logic lives in `app/Actions/`. Subdirectories: `Classes/`, `Exercis
 
 | Model | Table | Notes |
 |---|---|---|
-| `User` | `users` | `isAdmin()`, `isProfessor()`, `isAluno()` helpers; `remaining_lessons` accessor sums active packages; belongs to `School` via `school_id` |
-| `School` | `schools` | Multi-tenancy root; `slug`, `email`, `active`; has many `User`s |
-| `TurmaClass` | `classes` | Named `TurmaClass` because `class` is a PHP reserved word; `$table = 'classes'` |
-| `LessonPackage` | `lesson_packages` | `scopeActive()` = not exhausted AND not expired (null expires_at = never expires) |
-| `Lesson` | `lessons` | `package_id` uses `restrictOnDelete()` — lessons are audit records and must not be destroyed when a package is deleted |
-| `Material` | `materials` | `download_url` accessor via `Storage::disk('public')` |
-| `Payment` | `payments` | Links `student_id` + `lesson_package_id`; fields: `amount`, `currency`, `method`, `paid_at`, `notes`; registered via `RegisterPaymentAction` |
+| `User` | `users` | `isAdmin()`, `isProfessor()`, `isAluno()` helpers; `remaining_lessons` accessor sums active packages; belongs to `School` via `school_id` (nullable — super_admin will have no school) |
+| `School` | `schools` | Multi-tenancy root; `slug` (unique, future subdomain), `email`, `active`; has many `User`s; default school id=1 slug="tkl" |
+| `TurmaClass` | `classes` | Named `TurmaClass` because `class` is a PHP reserved word; `$table = 'classes'`; has `school_id` NOT NULL |
+| `LessonPackage` | `lesson_packages` | `scopeActive()` = not exhausted AND not expired (null expires_at = never expires); has `school_id` NOT NULL |
+| `Lesson` | `lessons` | `package_id` uses `restrictOnDelete()` — lessons are audit records and must not be destroyed when a package is deleted; has `school_id` NOT NULL |
+| `Material` | `materials` | `download_url` accessor via `Storage::disk('public')`; has `school_id` NOT NULL |
+| `Payment` | `payments` | Links `student_id` + `lesson_package_id`; fields: `amount`, `currency`, `method`, `paid_at`, `notes`; registered via `RegisterPaymentAction`; has `school_id` NOT NULL — set automatically in `RegisterPaymentAction` from `$package->school_id` |
 | `Schedule` | `schedules` | Recurring rule: `class_id`, `weekday` (0=Sun), `start_time`, `duration_minutes`, `active`; `weekdayName()` returns PT-BR day name |
 | `ScheduledLesson` | `scheduled_lessons` | Concrete lesson instance from a `Schedule`; `status`: `scheduled`/`confirmed`/`cancelled`; `lesson_id` set when confirmed; managed by `CreateScheduleAction`, `GenerateScheduledLessonsAction`, `ConfirmScheduledLessonAction`, `CancelScheduledLessonAction` |
 | `ExerciseList` | `exercise_lists` | Homework list assigned to a class (and optionally a lesson); `due_date` cast as `date`; `isOverdue()` uses `lt(today())` not `isPast()` (boundary: due today = not yet overdue) |
@@ -117,8 +133,11 @@ Routes in `routes/web.php` use three nested groups:
 ### Testing
 
 - Unit tests in `tests/Unit/Models/` (model behaviour) and `tests/Unit/Actions/` (action classes) use `RefreshDatabase` against SQLite in-memory (configured in `phpunit.xml`)
+- `SchoolFactory` has `inactive()` state
 - `LessonPackageFactory` has `expired()` and `exhausted()` states; `exhausted()` uses `afterCreating()` because `used_lessons` is not in `$fillable`
 - `ExerciseListFactory` has `overdue()` and `noDueDate()` states; `ExerciseSubmissionFactory` has `submitted()` state
+- All factories that create tenant-scoped models include `school_id => School::factory()` by default
+- `LessonFactory` creates a shared school internally and threads `school_id` through professor, student, class, and package so all entities belong to the same school
 - Use `Storage::fake('public')` in tests that exercise file upload paths
 - `bee:code-reviewer` agent always fails (qwen model unavailable) — skip it, use the other 4 reviewers
 
@@ -126,4 +145,4 @@ Routes in `routes/web.php` use three nested groups:
 
 SQLite in `.env` at `database/database.sqlite`. Tests use SQLite in-memory (already configured in `phpunit.xml` — do not comment those lines out).
 
-Seed data: `admin@tkl.com` / `password`, 3 professors, 10 students each with a 20-lesson package, 1 class "Inglês Básico" with 5 enrolled students.
+Seed data: `admin@tkl.com` / `password`, 3 professors, 10 students each with a 20-lesson package, 1 class "Inglês Básico" with 5 enrolled students — all assigned to school id=1 (TKL Idiomas).

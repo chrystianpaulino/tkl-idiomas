@@ -17,6 +17,7 @@ class LessonPackageFactory extends Factory
             'total_lessons' => $this->faker->numberBetween(5, 40),
             'purchased_at' => now(),
             'expires_at' => $this->faker->optional()->dateTimeBetween('+1 month', '+1 year'),
+            'school_id' => \App\Models\School::factory(),
         ];
     }
 

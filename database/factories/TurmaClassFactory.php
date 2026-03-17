@@ -16,6 +16,7 @@ class TurmaClassFactory extends Factory
             'name' => $this->faker->words(3, true),
             'professor_id' => User::factory()->professor(),
             'description' => $this->faker->optional()->sentence(),
+            'school_id' => \App\Models\School::factory(),
         ];
     }
 }

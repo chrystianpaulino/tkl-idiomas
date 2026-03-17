@@ -159,6 +159,31 @@ function AdminDashboard({ stats }) {
                 />
             </div>
 
+            {/* Payment summary */}
+            {stats?.payment_summary && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <StatsCard
+                        title="Receita Total"
+                        value={new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(stats.payment_summary.total_revenue ?? 0)}
+                        icon={<CurrencyIcon className="w-5 h-5" />}
+                        iconBg="bg-emerald-50"
+                        iconColor="text-emerald-600"
+                    />
+                    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 hover:shadow-md transition-shadow flex items-center justify-between">
+                        <div>
+                            <p className="text-3xl font-bold text-gray-900 tabular-nums">{stats.payment_summary.unpaid_count ?? 0}</p>
+                            <p className="text-sm text-gray-500 mt-1">Pacotes Nao Pagos</p>
+                        </div>
+                        <Link
+                            href={route('admin.payments.report')}
+                            className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
+                        >
+                            Ver Relatorio
+                        </Link>
+                    </div>
+                </div>
+            )}
+
             {/* Recent Activity */}
             {stats?.recent_lessons?.length > 0 && (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
@@ -226,22 +251,32 @@ function ProfessorDashboard({ stats }) {
                             </Link>
                         </div>
                         <ul className="divide-y divide-gray-100">
-                            {stats.classes.map((c) => (
-                                <li key={c.id}>
-                                    <Link href={`/classes/${c.id}`} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors block">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-                                                <BookOpenIcon className="w-4 h-4" />
+                            {stats.classes.map((c) => {
+                                const paymentStat = stats?.class_payment_stats?.find((s) => s.class_id === c.id);
+                                return (
+                                    <li key={c.id}>
+                                        <Link href={`/classes/${c.id}`} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50/50 transition-colors block">
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                                                    <BookOpenIcon className="w-4 h-4" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-900">{c.name}</p>
+                                                    <p className="text-xs text-gray-500">
+                                                        {c.students_count ?? 0} alunos
+                                                        {paymentStat && (
+                                                            <span className="ml-2 text-emerald-600">
+                                                                {paymentStat.paid}/{paymentStat.total} com pacote pago
+                                                            </span>
+                                                        )}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-900">{c.name}</p>
-                                                <p className="text-xs text-gray-500">{c.students_count ?? 0} alunos</p>
-                                            </div>
-                                        </div>
-                                        <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5l7 7-7 7" /></svg>
-                                    </Link>
-                                </li>
-                            ))}
+                                            <svg className="w-4 h-4 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 5l7 7-7 7" /></svg>
+                                        </Link>
+                                    </li>
+                                );
+                            })}
                         </ul>
                     </div>
                 )}
@@ -469,6 +504,37 @@ function AlunoDashboard({ stats }) {
 
             {/* Progress Card */}
             <ProgressCard progress={stats?.progress} />
+
+            {/* Payment History */}
+            {stats?.payment_history?.length > 0 && (
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                    <div className="px-6 py-4 border-b border-gray-100">
+                        <h3 className="text-sm font-semibold text-gray-900">Meus Pagamentos</h3>
+                    </div>
+                    <ul className="divide-y divide-gray-100">
+                        {stats.payment_history.map((payment) => (
+                            <li key={payment.id} className="px-6 py-4 flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                                        <CurrencyIcon className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900">
+                                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(payment.amount)}
+                                        </p>
+                                        <p className="text-xs text-gray-500">
+                                            {payment.total_lessons} aulas &middot; {payment.paid_at}
+                                        </p>
+                                    </div>
+                                </div>
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">
+                                    {{ pix: 'PIX', cash: 'Dinheiro', card: 'Cartao', transfer: 'Transferencia', other: 'Outro' }[payment.method] ?? payment.method}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Recent Lessons */}

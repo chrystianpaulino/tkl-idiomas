@@ -20,6 +20,7 @@ class LessonPackage extends Model
         'currency',
         'purchased_at',
         'expires_at',
+        'school_id',
     ];
 
     protected function casts(): array

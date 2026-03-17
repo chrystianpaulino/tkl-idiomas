@@ -18,6 +18,7 @@ class MaterialFactory extends Factory
             'title' => $this->faker->sentence(3),
             'file_path' => 'materials/' . $this->faker->uuid() . '.pdf',
             'description' => $this->faker->optional()->sentence(),
+            'school_id' => \App\Models\School::factory(),
         ];
     }
 }

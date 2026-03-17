@@ -24,6 +24,7 @@ class RegisterPaymentAction
             'method'            => $data['method'] ?? 'pix',
             'paid_at'           => $data['paid_at'],
             'notes'             => $data['notes'] ?? null,
+            'school_id'         => $package->school_id,
         ]);
     }
 }

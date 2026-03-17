@@ -19,6 +19,7 @@ class Payment extends Model
         'method',
         'paid_at',
         'notes',
+        'school_id',
     ];
 
     protected function casts(): array

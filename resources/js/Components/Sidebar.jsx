@@ -4,7 +4,9 @@ const navConfig = {
     admin: [
         { label: 'Dashboard', href: '/dashboard', icon: '◈' },
         { label: 'Usuários', href: '/admin/users', icon: '◎' },
+        { label: 'Escolas', href: '/admin/schools', icon: '⊟' },
         { label: 'Turmas', href: '/classes', icon: '⊞' },
+        { label: 'Relatório Financeiro', href: '/admin/payments/report', icon: '◇' },
     ],
     professor: [
         { label: 'Dashboard', href: '/dashboard', icon: '◈' },
@@ -24,7 +26,8 @@ const roleBadgeColors = {
 };
 
 export default function Sidebar() {
-    const { auth } = usePage().props;
+    const { auth, app_name: appName } = usePage().props;
+    const school = auth?.school;
     const role = auth?.user?.role ?? 'aluno';
     const items = navConfig[role] ?? navConfig.aluno;
     const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
@@ -35,10 +38,14 @@ export default function Sidebar() {
             <div className="px-5 py-5 border-b border-slate-800">
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-white font-bold text-sm">T</span>
+                        <span className="text-white font-bold text-sm">
+                            {(school?.name ?? appName).charAt(0).toUpperCase()}
+                        </span>
                     </div>
-                    <div>
-                        <p className="text-white font-semibold text-sm leading-tight">TKL Idiomas</p>
+                    <div className="min-w-0">
+                        <p className="text-white font-semibold text-sm leading-tight truncate">
+                            {school?.name ?? appName}
+                        </p>
                         <p className="text-slate-500 text-xs">Sistema de Gestão</p>
                     </div>
                 </div>

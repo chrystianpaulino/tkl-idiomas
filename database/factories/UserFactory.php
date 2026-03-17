@@ -30,6 +30,7 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'role' => 'aluno',
             'remember_token' => Str::random(10),
+            'school_id' => \App\Models\School::factory(),
         ];
     }
 

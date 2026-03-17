@@ -1,6 +1,7 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 
 export default function Login({ status, canResetPassword }) {
+    const { app_name: appName } = usePage().props;
     const { data, setData, post, processing, errors, reset } = useForm({
         email: '',
         password: '',
@@ -14,16 +15,16 @@ export default function Login({ status, canResetPassword }) {
 
     return (
         <>
-            <Head title="Entrar — TKL Idiomas" />
+            <Head title={`Entrar — ${appName}`} />
             <div className="min-h-screen flex">
                 {/* Left Panel — Brand */}
                 <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 flex-col justify-between p-12">
                     <div>
                         <div className="flex items-center gap-3">
                             <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
-                                <span className="text-white font-bold text-lg">T</span>
+                                <span className="text-white font-bold text-lg">{appName.charAt(0).toUpperCase()}</span>
                             </div>
-                            <span className="text-white font-bold text-xl">TKL Idiomas</span>
+                            <span className="text-white font-bold text-xl">{appName}</span>
                         </div>
                     </div>
                     <div className="space-y-4">
@@ -51,9 +52,9 @@ export default function Login({ status, canResetPassword }) {
                         {/* Mobile logo */}
                         <div className="flex items-center gap-3 mb-8 lg:hidden">
                             <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center">
-                                <span className="text-white font-bold">T</span>
+                                <span className="text-white font-bold">{appName.charAt(0).toUpperCase()}</span>
                             </div>
-                            <span className="font-bold text-gray-900 text-lg">TKL Idiomas</span>
+                            <span className="font-bold text-gray-900 text-lg">{appName}</span>
                         </div>
 
                         <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">

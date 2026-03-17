@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Payments\GetRevenueReportAction;
 use App\Actions\Payments\RegisterPaymentAction;
 use App\Http\Requests\StorePaymentRequest;
 use App\Models\LessonPackage;
@@ -57,5 +58,12 @@ class PaymentController extends Controller
         }
 
         return back()->with('success', 'Pagamento registrado com sucesso.');
+    }
+
+    public function report(GetRevenueReportAction $action)
+    {
+        $data = $action->execute();
+
+        return Inertia::render('Admin/PaymentReport', $data);
     }
 }

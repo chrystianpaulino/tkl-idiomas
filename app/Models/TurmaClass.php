@@ -18,6 +18,7 @@ class TurmaClass extends Model
         'name',
         'professor_id',
         'description',
+        'school_id',
     ];
 
     public function professor(): BelongsTo

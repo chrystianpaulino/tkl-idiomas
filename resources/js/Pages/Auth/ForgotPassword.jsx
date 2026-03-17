@@ -1,6 +1,7 @@
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 
 export default function ForgotPassword({ status }) {
+    const { app_name: appName } = usePage().props;
     const { data, setData, post, processing, errors } = useForm({
         email: '',
     });
@@ -12,15 +13,15 @@ export default function ForgotPassword({ status }) {
 
     return (
         <>
-            <Head title="Esqueci minha senha — TKL Idiomas" />
+            <Head title={`Esqueci minha senha — ${appName}`} />
             <div className="min-h-screen flex items-center justify-center bg-gray-50 p-8">
                 <div className="w-full max-w-md">
                     {/* Logo */}
                     <div className="flex items-center justify-center gap-3 mb-8">
                         <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center">
-                            <span className="text-white font-bold text-lg">T</span>
+                            <span className="text-white font-bold text-lg">{appName.charAt(0).toUpperCase()}</span>
                         </div>
-                        <span className="font-bold text-gray-900 text-xl">TKL Idiomas</span>
+                        <span className="font-bold text-gray-900 text-xl">{appName}</span>
                     </div>
 
                     <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">

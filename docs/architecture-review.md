@@ -1,3 +1,49 @@
+# TKL Idiomas — Architecture Review
+
+> **Última atualização:** 2026-03-17
+> Este documento foi gerado como análise de gaps no início do projeto. A seção abaixo mostra o que foi implementado desde então.
+
+## ✅ Status de Implementação (atualizado 2026-03-17)
+
+### Gaps resolvidos
+
+| Gap original | Status |
+|---|---|
+| Preço/currency em pacotes | ✅ Implementado — `price`, `currency` em `lesson_packages` |
+| Rastreamento de pagamentos | ✅ Implementado — tabela `payments` + `RegisterPaymentAction` |
+| Status de aulas / presença | ✅ Implementado — enum `status` em `lessons` |
+| Alerta "precisa renovar pacote" | ✅ Implementado — `needsToRenewPackage()` + `scopeNeedingPayment()` |
+| Aulas agendadas | ✅ Implementado — `schedules` + `scheduled_lessons` + 4 Actions |
+| Progress tracking | ✅ Implementado — `GetProgressStatsAction` (streak, milestones, horas) |
+| Listas de exercícios (homework) | ✅ Implementado — Feature 6 completa com submissão de respostas e upload de arquivos |
+| Coluna `users.phone` | ✅ Implementado |
+| Multi-tenancy — fundação de dados | ✅ Implementado — `school_id` NOT NULL em todas as tabelas de negócio |
+
+### Em progresso
+
+| Item | Status |
+|---|---|
+| Global Scopes (isolamento de queries) | 🔄 Próximo passo |
+| Middleware `SetTenantContext` | 🔄 Próximo passo |
+| Roles: `super_admin` / `school_admin` | 🔄 Planejado |
+| Subdomínios por escola | 🔄 Planejado (Fase 4) |
+| Billing / Stripe | 🔄 Planejado (Fase 5) |
+
+### Não implementado
+
+| Item | Status |
+|---|---|
+| Integração WhatsApp | ❌ Não iniciado |
+| Capacidade máxima de turma | ❌ Não iniciado |
+| Materiais por aula (lesson-specific) | ❌ Não iniciado |
+| Notificações push/email | ❌ Não iniciado |
+
+---
+
+*(Conteúdo original do architecture review abaixo)*
+
+---
+
 # TKL Idiomas — Architecture Review & Proposal
 
 > **Audience:** Lead developer with full codebase context.
