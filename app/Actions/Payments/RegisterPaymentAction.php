@@ -5,20 +5,23 @@ namespace App\Actions\Payments;
 use App\Models\LessonPackage;
 use App\Models\Payment;
 use App\Models\User;
-use Illuminate\Support\Facades\Auth;
 
 class RegisterPaymentAction
 {
-    public function execute(User $student, LessonPackage $package, array $data): Payment
+    public function execute(User $student, LessonPackage $package, array $data, int $registeredBy): Payment
     {
         if ($package->student_id !== $student->id) {
             abort(403, 'The package does not belong to the given student.');
         }
 
+        if ($data['amount'] <= 0) {
+            throw new \InvalidArgumentException('Payment amount must be greater than zero.');
+        }
+
         return Payment::create([
             'student_id'        => $student->id,
             'lesson_package_id' => $package->id,
-            'registered_by'     => Auth::id(),
+            'registered_by'     => $registeredBy,
             'amount'            => $data['amount'],
             'currency'          => $data['currency'] ?? 'BRL',
             'method'            => $data['method'] ?? 'pix',

@@ -22,7 +22,7 @@ class GetRevenueReportActionTest extends TestCase
         $this->action = new GetRevenueReportAction;
     }
 
-    // ─── Return shape ──────────────────────────────────────────────────────
+    // --- Return shape ---
 
     public function test_returns_expected_keys(): void
     {
@@ -45,9 +45,12 @@ class GetRevenueReportActionTest extends TestCase
         $this->assertSame([], $result['revenue_by_month']);
         $this->assertSame([], $result['by_method']);
         $this->assertSame([], $result['recent_payments']);
+        $this->assertSame(0, $result['paid_packages_count']);
+        $this->assertSame(0, $result['unpaid_packages_count']);
+        $this->assertSame(0, $result['total_students']);
     }
 
-    // ─── total_revenue ─────────────────────────────────────────────────────
+    // --- total_revenue ---
 
     public function test_total_revenue_sums_all_payments(): void
     {
@@ -65,7 +68,7 @@ class GetRevenueReportActionTest extends TestCase
         $this->assertEqualsWithDelta(500.00, $result['total_revenue'], 0.001);
     }
 
-    // ─── total_students ────────────────────────────────────────────────────
+    // --- total_students ---
 
     public function test_total_students_counts_only_aluno_role(): void
     {
@@ -79,7 +82,7 @@ class GetRevenueReportActionTest extends TestCase
         $this->assertSame(2, $result['total_students']);
     }
 
-    // ─── paid_packages_count / unpaid_packages_count ───────────────────────
+    // --- paid_packages_count / unpaid_packages_count ---
 
     public function test_counts_paid_and_unpaid_packages(): void
     {
@@ -112,7 +115,7 @@ class GetRevenueReportActionTest extends TestCase
         $this->assertSame(0, $result['unpaid_packages_count']);
     }
 
-    // ─── by_method ─────────────────────────────────────────────────────────
+    // --- by_method ---
 
     public function test_by_method_groups_by_payment_method(): void
     {
@@ -139,7 +142,7 @@ class GetRevenueReportActionTest extends TestCase
         $this->assertSame(1, $byMethod['cash']['count']);
     }
 
-    // ─── recent_payments ───────────────────────────────────────────────────
+    // --- recent_payments ---
 
     public function test_recent_payments_includes_student_name(): void
     {
@@ -193,7 +196,36 @@ class GetRevenueReportActionTest extends TestCase
         $this->assertArrayHasKey('paid_at', $entry);
     }
 
-    // ─── school_id scoping ─────────────────────────────────────────────────
+    public function test_recent_payments_are_ordered_by_most_recent_first(): void
+    {
+        $student = User::factory()->create(['role' => 'aluno']);
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $pkgOld = LessonPackage::factory()->create(['student_id' => $student->id]);
+        $pkgNew = LessonPackage::factory()->create(['student_id' => $student->id]);
+
+        Payment::factory()->create([
+            'student_id'        => $student->id,
+            'lesson_package_id' => $pkgOld->id,
+            'registered_by'     => $admin->id,
+            'paid_at'           => '2026-01-10',
+            'school_id'         => $student->school_id,
+        ]);
+        Payment::factory()->create([
+            'student_id'        => $student->id,
+            'lesson_package_id' => $pkgNew->id,
+            'registered_by'     => $admin->id,
+            'paid_at'           => '2026-03-10',
+            'school_id'         => $student->school_id,
+        ]);
+
+        $result = $this->action->execute();
+
+        $this->assertEquals('2026-03-10', $result['recent_payments'][0]['paid_at']);
+        $this->assertEquals('2026-01-10', $result['recent_payments'][1]['paid_at']);
+    }
+
+    // --- school_id scoping ---
 
     public function test_filters_by_school_id_when_provided(): void
     {
@@ -208,6 +240,11 @@ class GetRevenueReportActionTest extends TestCase
         $pkgA = LessonPackage::factory()->create(['student_id' => $studentA->id, 'school_id' => $schoolA->id]);
         $pkgB = LessonPackage::factory()->create(['student_id' => $studentB->id, 'school_id' => $schoolB->id]);
 
+        // Unpaid package in school A
+        LessonPackage::factory()->create(['student_id' => $studentA->id, 'school_id' => $schoolA->id]);
+        // Unpaid package in school B
+        LessonPackage::factory()->create(['student_id' => $studentB->id, 'school_id' => $schoolB->id]);
+
         Payment::factory()->create(['student_id' => $studentA->id, 'lesson_package_id' => $pkgA->id, 'registered_by' => $admin->id, 'amount' => 100.00, 'school_id' => $schoolA->id]);
         Payment::factory()->create(['student_id' => $studentB->id, 'lesson_package_id' => $pkgB->id, 'registered_by' => $admin->id, 'amount' => 999.00, 'school_id' => $schoolB->id]);
 
@@ -216,6 +253,7 @@ class GetRevenueReportActionTest extends TestCase
         $this->assertEqualsWithDelta(100.00, $result['total_revenue'], 0.001);
         $this->assertSame(1, $result['total_students']);
         $this->assertSame(1, $result['paid_packages_count']);
+        $this->assertSame(1, $result['unpaid_packages_count']);
     }
 
     public function test_without_school_filter_returns_all_data(): void
@@ -240,7 +278,7 @@ class GetRevenueReportActionTest extends TestCase
         $this->assertSame(2, $result['total_students']);
     }
 
-    // ─── revenue_by_month ──────────────────────────────────────────────────
+    // --- revenue_by_month ---
 
     public function test_revenue_by_month_groups_correctly(): void
     {

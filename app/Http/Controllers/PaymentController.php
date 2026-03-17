@@ -6,6 +6,7 @@ use App\Actions\Payments\GetRevenueReportAction;
 use App\Actions\Payments\RegisterPaymentAction;
 use App\Http\Requests\StorePaymentRequest;
 use App\Models\LessonPackage;
+use App\Models\Payment;
 use App\Models\User;
 use Inertia\Inertia;
 
@@ -13,7 +14,9 @@ class PaymentController extends Controller
 {
     public function index(User $student)
     {
-        // No authorize() needed — route is behind role:admin middleware
+        if ($student->school_id !== null && $student->school_id !== request()->user()->school_id) {
+            abort(403);
+        }
 
         $packages = $student->lessonPackages()
             ->with('payment')
@@ -45,8 +48,12 @@ class PaymentController extends Controller
 
     public function store(StorePaymentRequest $request, User $student, LessonPackage $package, RegisterPaymentAction $action)
     {
+        if ($student->school_id !== null && $student->school_id !== $request->user()->school_id) {
+            abort(403);
+        }
+
         try {
-            $action->execute($student, $package, $request->validated());
+            $action->execute($student, $package, $request->validated(), $request->user()->id);
         } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
             return back()->with('error', 'Já existe um pagamento registrado para este pacote.');
         } catch (\Illuminate\Database\QueryException $e) {
@@ -62,7 +69,7 @@ class PaymentController extends Controller
 
     public function report(GetRevenueReportAction $action)
     {
-        $data = $action->execute();
+        $data = $action->execute(auth()->user()->school_id);
 
         return Inertia::render('Admin/PaymentReport', $data);
     }

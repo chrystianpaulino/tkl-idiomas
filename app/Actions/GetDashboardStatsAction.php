@@ -9,6 +9,8 @@ use App\Models\TurmaClass;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
+use App\Actions\GetProgressStatsAction;
+
 class GetDashboardStatsAction
 {
     public function execute(User $user): array
@@ -87,6 +89,10 @@ class GetDashboardStatsAction
                 ->latest('conducted_at')
                 ->limit(5)
                 ->get(),
+            'classes' => $user->taughtClasses()->latest()->get()->map(fn ($c) => [
+                'id'   => $c->id,
+                'name' => $c->name,
+            ]),
             'studentsNeedingPackage' => $studentsNeedingPackage,
             'class_payment_stats' => $classPaymentStats,
         ];

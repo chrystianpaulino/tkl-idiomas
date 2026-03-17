@@ -93,7 +93,6 @@ class LessonPackage extends Model
     public function scopeNeedingPayment(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
     {
         return $query->whereNotNull('price')
-                     ->whereColumn('used_lessons', '>=', 'total_lessons')
                      ->whereDoesntHave('payment');
     }
 }

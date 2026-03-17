@@ -38,6 +38,7 @@ class GetRevenueReportAction
 
         $byMethod = (clone $paymentQuery)
             ->selectRaw('method, SUM(amount) as total, COUNT(*) as count')
+            ->whereNotNull('amount')
             ->groupBy('method')
             ->get()
             ->map(fn ($row) => [
@@ -65,7 +66,7 @@ class GetRevenueReportAction
             ->get()
             ->map(fn (Payment $payment) => [
                 'id'           => $payment->id,
-                'student_name' => $payment->student->name ?? 'N/A',
+                'student_name' => $payment->student?->name ?? 'N/A',
                 'amount'       => (float) $payment->amount,
                 'method'       => $payment->method,
                 'paid_at'      => $payment->paid_at?->format('Y-m-d'),

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePaymentRequest extends FormRequest
 {
@@ -18,7 +19,7 @@ class StorePaymentRequest extends FormRequest
             'method'  => ['required', 'in:pix,cash,card,transfer,other'],
             'paid_at' => ['required', 'date', 'before_or_equal:now'],
             'notes'   => ['nullable', 'string', 'max:1000'],
-            'currency'=> ['sometimes', 'string', 'size:3'],
+            'currency'=> ['sometimes', 'string', 'size:3', 'regex:/^[A-Z]{3}$/', Rule::in(['BRL', 'USD', 'EUR'])],
         ];
     }
 }

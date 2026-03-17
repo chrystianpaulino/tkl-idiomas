@@ -14,8 +14,6 @@ class PaymentFactory extends Factory
 
     public function definition(): array
     {
-        $school = School::factory();
-
         return [
             'student_id'        => User::factory()->state(['role' => 'aluno']),
             'lesson_package_id' => LessonPackage::factory(),
@@ -25,19 +23,8 @@ class PaymentFactory extends Factory
             'method'            => $this->faker->randomElement(['pix', 'cash', 'card', 'transfer', 'other']),
             'paid_at'           => $this->faker->dateTimeBetween('-3 months', 'now'),
             'notes'             => $this->faker->optional(0.3)->sentence(),
-            'school_id'         => $school,
+            'school_id'         => School::factory(),
         ];
-    }
-
-    /**
-     * Configure the factory to link the student, package, and school consistently.
-     */
-    public function configure(): static
-    {
-        return $this->afterMaking(function (Payment $payment) {
-            // Ensure the package belongs to the same student and school
-            // This is handled by explicit state when using the factory
-        });
     }
 
     /**
