@@ -13,6 +13,17 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Manages lesson registration and deletion within a class context.
+ *
+ * Lesson creation delegates to RegisterLessonAction (atomically consumes a package
+ * credit). The store method catches RuntimeException from the action when no active
+ * package is available and returns a user-friendly validation error.
+ *
+ * @see RegisterLessonAction For the credit consumption logic
+ * @see DeleteLessonAction   For credit refund on lesson deletion
+ * @see LessonPolicy         For authorization rules
+ */
 class LessonController extends Controller
 {
     public function index(TurmaClass $class): Response
@@ -30,6 +41,10 @@ class LessonController extends Controller
         ]);
     }
 
+    /**
+     * Show the lesson registration form with enrolled students and their active package info.
+     * Students without an active package will show null for active_package.
+     */
     public function create(Request $request, TurmaClass $class): Response
     {
         $this->authorize('create', [Lesson::class, $class]);

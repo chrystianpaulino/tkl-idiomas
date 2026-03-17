@@ -8,8 +8,36 @@ use App\Models\TurmaClass;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Atomically registers a new lesson for a student against their earliest-expiring active package.
+ *
+ * This is the most critical action in the billing system. It uses a database transaction
+ * with a pessimistic lock (lockForUpdate) on the LessonPackage row to prevent TOCTOU
+ * race conditions -- if two requests arrive simultaneously for the last remaining credit,
+ * only one will succeed. The other will re-read after the lock and find no remaining credits.
+ *
+ * Also notifies the student when their package is exhausted or nearly exhausted.
+ *
+ * @see DeleteLessonAction  For the reverse operation (credit refund on deletion)
+ * @see CancelLessonAction  For cancellation with optional credit refund
+ */
 class RegisterLessonAction
 {
+    /**
+     * Register a lesson, consuming one credit from the student's active package.
+     *
+     * Selects the earliest-expiring active package (FIFO consumption). Re-verifies
+     * the package is still active after acquiring the lock to guard against races.
+     *
+     * @param TurmaClass $turmaClass The class in which the lesson is being conducted
+     * @param User $student          Must have at least one active LessonPackage
+     * @param User $professor        The professor conducting the lesson
+     * @param array $data            Validated data: title (required), notes, conducted_at
+     * @return Lesson                The persisted lesson record
+     *
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If no active package exists
+     * @throws \RuntimeException If the package has no remaining credits after the lock is acquired
+     */
     public function execute(TurmaClass $turmaClass, User $student, User $professor, array $data): Lesson
     {
         return DB::transaction(function () use ($turmaClass, $student, $professor, $data) {

@@ -1,6 +1,11 @@
 <?php
 namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
+/**
+ * Validates requests to create a new school (tenant).
+ *
+ * Admin-only. Slug must be URL-safe (lowercase alphanumeric + hyphens) and unique.
+ */
 class StoreSchoolRequest extends FormRequest
 {
     public function authorize(): bool { return $this->user()->isAdmin(); }

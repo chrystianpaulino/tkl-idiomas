@@ -11,6 +11,12 @@ use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Handles the authenticated user's own profile management.
+ *
+ * Changing the email address resets email_verified_at to null, requiring
+ * re-verification. Account deletion logs the user out and invalidates the session.
+ */
 class ProfileController extends Controller
 {
     /**

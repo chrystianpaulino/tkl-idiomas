@@ -4,8 +4,24 @@ namespace App\Actions\Schedules;
 
 use App\Models\ScheduledLesson;
 
+/**
+ * Cancels a scheduled lesson slot before it has been confirmed.
+ *
+ * This only applies to ScheduledLesson records (the calendar slot), NOT to actual
+ * Lesson records. If a lesson has already been confirmed (status = 'confirmed'),
+ * use CancelLessonAction instead to handle the credit refund properly.
+ *
+ * @see CancelLessonAction For cancelling already-confirmed lessons (with credit refund)
+ */
 class CancelScheduledLessonAction
 {
+    /**
+     * @param ScheduledLesson $scheduledLesson Must be in 'scheduled' status (not confirmed or already cancelled)
+     * @param string|null     $reason          Optional cancellation reason for record-keeping
+     * @return ScheduledLesson                 The refreshed record with 'cancelled' status
+     *
+     * @throws \LogicException If the slot is already confirmed or already cancelled
+     */
     public function execute(ScheduledLesson $scheduledLesson, ?string $reason = null): ScheduledLesson
     {
         if ($scheduledLesson->isConfirmed()) {

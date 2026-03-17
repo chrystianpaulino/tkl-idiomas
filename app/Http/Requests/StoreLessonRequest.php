@@ -4,6 +4,13 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validates and authorizes requests to register a new lesson.
+ *
+ * Authorization is context-aware: admins can register lessons for any class,
+ * while professors can only register for classes they teach (professor_id check
+ * against the route-bound TurmaClass). Students cannot register lessons.
+ */
 class StoreLessonRequest extends FormRequest
 {
     public function authorize(): bool

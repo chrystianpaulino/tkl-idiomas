@@ -6,10 +6,24 @@ use App\Models\Lesson;
 use App\Models\User;
 use Illuminate\Support\Carbon;
 
+/**
+ * Computes gamification and progress statistics for a student's dashboard.
+ *
+ * Calculates lessons completed, hours studied (from schedule durations or
+ * 60-min default), consecutive weekly streak, and progress toward the next
+ * lesson milestone. Uses SQLite-compatible strftime for week grouping.
+ *
+ * Called by GetDashboardStatsAction for the student (aluno) dashboard view.
+ */
 class GetProgressStatsAction
 {
+    /** @var int[] Lesson count milestones for gamification progress tracking */
     private const MILESTONES = [10, 20, 30, 40, 50, 75, 100, 150, 200];
 
+    /**
+     * @param User $student The student to compute progress stats for
+     * @return array{lessonsCompleted: int, hoursStudied: float, currentStreak: int, nextMilestone: int|null, milestoneProgress: int|float}
+     */
     public function execute(User $student): array
     {
         $lessonsCompleted = Lesson::where('student_id', $student->id)
@@ -29,6 +43,10 @@ class GetProgressStatsAction
         ];
     }
 
+    /**
+     * Calculate total study hours by summing schedule durations for lessons that
+     * came from a schedule, and assuming 60 minutes for ad-hoc lessons.
+     */
     private function calculateHoursStudied(int $studentId): float
     {
         $minutesFromSchedules = Lesson::where('lessons.student_id', $studentId)
@@ -53,6 +71,11 @@ class GetProgressStatsAction
         return round($totalMinutes / 60, 1);
     }
 
+    /**
+     * Calculate the student's current weekly lesson streak (consecutive weeks
+     * with at least one completed lesson, counting backward from the current week).
+     * Returns 0 if the most recent lesson week is older than last week.
+     */
     private function calculateStreak(int $studentId): int
     {
         $weeks = Lesson::where('student_id', $studentId)
@@ -90,6 +113,12 @@ class GetProgressStatsAction
         return $streak;
     }
 
+    /**
+     * Find the next milestone and compute percentage progress toward it.
+     *
+     * @param int $completed Total completed lessons
+     * @return array{0: int|null, 1: int|float} [nextMilestone, progressPercent] -- null milestone means all milestones achieved
+     */
     private function calculateMilestone(int $completed): array
     {
         foreach (self::MILESTONES as $milestone) {

@@ -6,8 +6,19 @@ use App\Models\LessonPackage;
 use App\Models\Payment;
 use App\Models\User;
 
+/**
+ * Generates a revenue report for the admin payment dashboard.
+ *
+ * Computes total revenue, monthly breakdown, per-method breakdown, paid/unpaid
+ * package counts, and recent payment history. All queries are tenant-scoped when
+ * a schoolId is provided. Uses SQLite-compatible strftime for date grouping.
+ */
 class GetRevenueReportAction
 {
+    /**
+     * @param int|null $schoolId Scope the report to a specific school, or null for all schools
+     * @return array{total_revenue: float, revenue_by_month: array, by_method: array, paid_packages_count: int, unpaid_packages_count: int, total_students: int, recent_payments: array}
+     */
     public function execute(?int $schoolId = null): array
     {
         $paymentQuery = Payment::query();

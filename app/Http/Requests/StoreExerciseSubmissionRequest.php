@@ -4,6 +4,13 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validates exercise submission requests from students.
+ *
+ * Student-only (aluno). Each answer may contain text, a file upload, or both.
+ * File uploads are limited to 10 MB. Cross-list answer injection is prevented
+ * at the action level (SubmitExerciseListAction), not here.
+ */
 class StoreExerciseSubmissionRequest extends FormRequest
 {
     public function authorize(): bool

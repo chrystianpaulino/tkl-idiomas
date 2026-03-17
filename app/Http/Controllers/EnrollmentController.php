@@ -9,6 +9,13 @@ use App\Models\TurmaClass;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 
+/**
+ * Handles student enrollment and unenrollment in classes.
+ *
+ * Admin-only (enforced by EnrollStudentRequest::authorize). Enrollment is
+ * idempotent (safe to call repeatedly). Unenrollment does not delete historical
+ * data (lessons, submissions).
+ */
 class EnrollmentController extends Controller
 {
     public function store(EnrollStudentRequest $request, TurmaClass $class, EnrollStudentAction $action): RedirectResponse

@@ -9,8 +9,31 @@ use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
+/**
+ * Handles student submission of answers to an exercise list.
+ *
+ * Supports both initial submission and re-submission (updating existing answers).
+ * Uses firstOrCreate for the submission record and updateOrCreate for each answer,
+ * making the operation idempotent. File answers replace the previous file on re-submit.
+ *
+ * Security: Only accepts exercise IDs that belong to the target list, preventing
+ * cross-list answer injection via manipulated form data.
+ *
+ * The submitted_at timestamp is set only on the FIRST submission and never overwritten
+ * on re-submissions, preserving the original submission time for grading fairness.
+ *
+ * @see ExerciseSubmission::isSubmitted() For checking if this is a re-submission
+ */
 class SubmitExerciseListAction
 {
+    /**
+     * @param ExerciseList $list    The exercise list being answered
+     * @param User         $student The student submitting answers
+     * @param array        $data    Validated data: answers[] keyed by exercise_id, each with answer_text and/or file
+     * @return ExerciseSubmission   The submission with answers eager-loaded
+     *
+     * @throws \RuntimeException If a file upload fails
+     */
     public function execute(ExerciseList $list, User $student, array $data): ExerciseSubmission
     {
         return DB::transaction(function () use ($list, $student, $data) {

@@ -12,8 +12,23 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Manages exercise lists (homework) within a class context.
+ *
+ * The index view is role-aware: students see their own submission status per list,
+ * while professors/admins see submission counts. The show view similarly splits
+ * between showing the student's own submission vs. all submissions for review.
+ *
+ * @see ExerciseListPolicy        For authorization (viewAny, view, create, delete)
+ * @see CreateExerciseListAction  For list + exercise creation in a single transaction
+ * @see DeleteExerciseListAction  For file cleanup before cascade delete
+ */
 class ExerciseListController extends Controller
 {
+    /**
+     * List exercise lists for a class. Students see their submission status;
+     * professors/admins see aggregate counts.
+     */
     public function index(Request $request, TurmaClass $class): Response
     {
         $this->authorize('viewAny', [ExerciseList::class, $class]);
@@ -79,6 +94,10 @@ class ExerciseListController extends Controller
             ->with('success', 'Lista de exercicios criada com sucesso.');
     }
 
+    /**
+     * Show an exercise list. Students see their own submission + answers; professors/admins
+     * see all student submissions for grading/review.
+     */
     public function show(Request $request, TurmaClass $class, ExerciseList $exerciseList): Response
     {
         $this->authorize('view', [$exerciseList, $class]);

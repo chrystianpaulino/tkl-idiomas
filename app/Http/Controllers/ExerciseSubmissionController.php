@@ -11,8 +11,21 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Handles student exercise submissions (answer form + submission processing).
+ *
+ * The create action shows the answer form, pre-filling with existing answers
+ * if the student has a draft/previous submission. The store action delegates
+ * to SubmitExerciseListAction which handles both first-time and re-submissions.
+ *
+ * @see SubmitExerciseListAction For the submission/re-submission logic
+ * @see ExerciseListPolicy       For the 'submit' authorization check
+ */
 class ExerciseSubmissionController extends Controller
 {
+    /**
+     * Show the answer form for an exercise list, pre-filled with any existing answers.
+     */
     public function create(Request $request, TurmaClass $class, ExerciseList $exerciseList): Response
     {
         $this->authorize('submit', [$exerciseList, $class]);

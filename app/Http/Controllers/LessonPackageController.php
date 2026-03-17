@@ -10,6 +10,16 @@ use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Admin-only controller for managing a student's lesson credit packages.
+ *
+ * Packages with existing lessons cannot be deleted (the Lesson FK uses
+ * restrictOnDelete at the DB level), so the destroy method performs an
+ * explicit check and returns a validation error instead of letting the
+ * DB constraint fail with a cryptic error.
+ *
+ * @see CreatePackageAction For package creation logic
+ */
 class LessonPackageController extends Controller
 {
     public function index(User $student): Response

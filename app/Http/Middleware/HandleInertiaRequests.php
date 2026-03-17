@@ -5,6 +5,16 @@ namespace App\Http\Middleware;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
+/**
+ * Inertia middleware that shares global props with all frontend pages.
+ *
+ * Provides the authenticated user (id, name, email, role), their school context,
+ * flash messages (success/error), and the application name. Flash messages use
+ * lazy closures to avoid reading from session on every request -- only evaluated
+ * when the frontend actually renders the prop.
+ *
+ * AppLayout on the frontend automatically displays flash.success and flash.error.
+ */
 class HandleInertiaRequests extends Middleware
 {
     /**

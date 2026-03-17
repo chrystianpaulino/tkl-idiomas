@@ -11,8 +11,24 @@ use Illuminate\Support\Facades\DB;
 
 use App\Actions\GetProgressStatsAction;
 
+/**
+ * Assembles role-specific dashboard statistics for the authenticated user.
+ *
+ * Returns different data shapes depending on the user's role:
+ * - Admin: platform-wide counts (students, professors, classes, revenue summary)
+ * - Professor: their classes, recent lessons taught, students needing payment
+ * - Student (aluno): active package, recent lessons, enrolled classes, progress stats, warnings
+ *
+ * Called by DashboardController as the single entry point for the dashboard page.
+ *
+ * @see GetProgressStatsAction For the student gamification sub-stats
+ */
 class GetDashboardStatsAction
 {
+    /**
+     * @param User $user The authenticated user requesting their dashboard
+     * @return array     Role-specific statistics array consumed by the React dashboard
+     */
     public function execute(User $user): array
     {
         return match ($user->role) {
@@ -23,6 +39,9 @@ class GetDashboardStatsAction
         };
     }
 
+    /**
+     * Platform-wide statistics for the admin overview dashboard.
+     */
     private function adminStats(): array
     {
         return [
@@ -38,6 +57,10 @@ class GetDashboardStatsAction
         ];
     }
 
+    /**
+     * Professor-specific stats: their classes, recent lessons, and students with unpaid packages.
+     * Also includes per-class payment status breakdown for the professor's class roster.
+     */
     private function professorStats(User $user): array
     {
         $studentsNeedingPackage = LessonPackage::needingPayment()
@@ -98,6 +121,13 @@ class GetDashboardStatsAction
         ];
     }
 
+    /**
+     * Student dashboard: active package info, recent lessons, enrolled classes,
+     * gamification progress, payment history, and package renewal warnings.
+     *
+     * Warning levels: 'last_lesson' (1 credit remaining), 'exhausted' (all credits
+     * used, had packages before), 'no_package' (never had any package).
+     */
     private function alunoStats(User $user): array
     {
         $activePackage = $user->lessonPackages()

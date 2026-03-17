@@ -4,6 +4,11 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validates and authorizes requests to update an existing class.
+ *
+ * Authorization: admins and professors only. Same rules as StoreClassRequest.
+ */
 class UpdateClassRequest extends FormRequest
 {
     public function authorize(): bool

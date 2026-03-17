@@ -5,6 +5,12 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Validates requests to register a payment for a lesson package.
+ *
+ * Admin-only. Amount must be positive, paid_at cannot be in the future,
+ * and currency (if provided) must be a supported ISO 4217 code.
+ */
 class StorePaymentRequest extends FormRequest
 {
     public function authorize(): bool

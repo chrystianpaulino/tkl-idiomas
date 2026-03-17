@@ -7,15 +7,27 @@ use App\Models\ScheduledLesson;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
+/**
+ * Materializes concrete ScheduledLesson slots from recurring Schedule rules.
+ *
+ * Designed to be run periodically (e.g., via a scheduled artisan command) to ensure
+ * there are always N weeks of future lesson slots available for each active schedule.
+ * Uses firstOrCreate for idempotency -- safe to run multiple times without duplicating slots.
+ *
+ * @see CreateScheduleAction          For creating the recurring rule
+ * @see ConfirmScheduledLessonAction  For converting a slot into actual Lesson records
+ */
 class GenerateScheduledLessonsAction
 {
     /**
-     * Generate scheduled lesson slots for a schedule, N weeks ahead.
-     * Idempotent: uses firstOrCreate to skip existing slots.
+     * Generate scheduled lesson slots for a single schedule, looking N weeks ahead.
      *
-     * @param  Schedule  $schedule
-     * @param  int       $weeksAhead  How many weeks of future slots to ensure exist
-     * @return Collection  Newly created ScheduledLesson instances
+     * Skips inactive schedules. Uses firstOrCreate keyed on (schedule_id, class_id,
+     * scheduled_at) to ensure idempotency across repeated runs.
+     *
+     * @param Schedule $schedule   The recurring schedule rule to generate slots for
+     * @param int      $weeksAhead How many weeks into the future to generate (default: 4)
+     * @return Collection<int, ScheduledLesson> Only the newly created slots (not pre-existing ones)
      */
     public function execute(Schedule $schedule, int $weeksAhead = 4): Collection
     {
@@ -61,7 +73,11 @@ class GenerateScheduledLessonsAction
     }
 
     /**
-     * Run for ALL active schedules. Called by the artisan command.
+     * Generate slots for ALL active schedules across the platform.
+     * Intended to be called by a scheduled artisan command (e.g., daily cron).
+     *
+     * @param int $weeksAhead How many weeks into the future to generate
+     * @return int            Total number of newly created slots across all schedules
      */
     public function executeForAll(int $weeksAhead = 4): int
     {

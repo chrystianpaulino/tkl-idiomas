@@ -12,6 +12,15 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Manages teaching materials (upload, list, download, delete) for a class.
+ *
+ * Upload and delete are restricted to admins and the class professor.
+ * Download is available to anyone who can view the class (including students).
+ * File storage and notifications are handled by UploadMaterialAction/DeleteMaterialAction.
+ *
+ * @see MaterialPolicy For authorization rules (create, delete, download)
+ */
 class MaterialController extends Controller
 {
     public function index(TurmaClass $class): Response

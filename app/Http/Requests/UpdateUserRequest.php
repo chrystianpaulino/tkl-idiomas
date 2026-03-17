@@ -5,6 +5,12 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Validates and authorizes user update requests.
+ *
+ * Admin-only. Email uniqueness check ignores the current user being edited.
+ * Password is not updatable through this request (only name, email, role).
+ */
 class UpdateUserRequest extends FormRequest
 {
     public function authorize(): bool

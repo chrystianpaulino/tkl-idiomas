@@ -11,6 +11,15 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Admin-only CRUD controller for managing platform users.
+ *
+ * The update method directly sets the role attribute (bypassing $fillable)
+ * because role is intentionally excluded from mass assignment. This is one
+ * of two places role is set (the other is CreateUserAction).
+ *
+ * @see CreateUserAction For user creation with direct role assignment
+ */
 class UserController extends Controller
 {
     public function index(Request $request): Response

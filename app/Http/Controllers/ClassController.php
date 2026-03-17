@@ -14,8 +14,21 @@ use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * CRUD controller for TurmaClass (teaching groups).
+ *
+ * The index view is role-scoped: admins see all classes, professors see only
+ * their own, students see only classes they are enrolled in. Authorization
+ * is enforced via ClassPolicy.
+ *
+ * @see ClassPolicy      For authorization rules
+ * @see CreateClassAction For class creation business logic
+ */
 class ClassController extends Controller
 {
+    /**
+     * List classes, filtered by the current user's role.
+     */
     public function index(Request $request): Response
     {
         $classes = TurmaClass::with('professor')
@@ -48,6 +61,10 @@ class ClassController extends Controller
         return redirect()->route('classes.index')->with('success', 'Turma criada com sucesso.');
     }
 
+    /**
+     * Show class details: professor, enrolled students (with remaining credits),
+     * recent lessons, materials, and permission flags for the frontend.
+     */
     public function show(Request $request, TurmaClass $class): Response
     {
         $this->authorize('view', $class);

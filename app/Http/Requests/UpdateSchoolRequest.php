@@ -2,6 +2,11 @@
 namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+/**
+ * Validates requests to update an existing school.
+ *
+ * Admin-only. Slug uniqueness check ignores the current school being edited.
+ */
 class UpdateSchoolRequest extends FormRequest
 {
     public function authorize(): bool { return $this->user()->isAdmin(); }

@@ -8,6 +8,20 @@ use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Confirms a scheduled lesson by creating actual Lesson records for all enrolled students.
+ *
+ * This is the bridge between the scheduling system and the billing system: for each
+ * student enrolled in the class, it delegates to RegisterLessonAction (which atomically
+ * consumes one credit from their active package). All student lessons are created within
+ * a single outer transaction to ensure atomicity.
+ *
+ * After confirmation, the ScheduledLesson status changes to 'confirmed' and its lesson_id
+ * points to the first Lesson created (representative record for group classes).
+ *
+ * @see RegisterLessonAction       Handles per-student credit consumption
+ * @see CancelScheduledLessonAction For cancelling instead of confirming
+ */
 class ConfirmScheduledLessonAction
 {
     public function __construct(
@@ -15,13 +29,15 @@ class ConfirmScheduledLessonAction
     ) {}
 
     /**
-     * Confirm a scheduled lesson for all enrolled students.
-     * Calls RegisterLessonAction per student inside a single outer transaction.
+     * Confirm a scheduled lesson for all enrolled students in the class.
      *
-     * @param  ScheduledLesson  $scheduledLesson
-     * @param  User             $professor
-     * @param  array            $data  title, notes, conducted_at (optional)
-     * @return Collection  Created Lesson instances
+     * @param ScheduledLesson $scheduledLesson Must be in 'scheduled' status
+     * @param User            $professor       The professor confirming/conducting the lesson
+     * @param array           $data            Optional: title, notes, conducted_at
+     * @return Collection<int, \App\Models\Lesson> One Lesson per enrolled student
+     *
+     * @throws \LogicException    If the scheduled lesson is not in 'scheduled' status
+     * @throws \RuntimeException  If no students are enrolled in the class
      */
     public function execute(ScheduledLesson $scheduledLesson, User $professor, array $data = []): Collection
     {

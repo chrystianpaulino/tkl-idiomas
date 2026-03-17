@@ -9,6 +9,13 @@ use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
+/**
+ * Admin-only CRUD controller for managing schools (tenants).
+ *
+ * Schools are the multi-tenancy root entity. The index view includes a user
+ * count per school for quick overview. Deletion does not cascade-check for
+ * dependent users -- consider adding a guard if needed.
+ */
 class SchoolController extends Controller
 {
     public function index(): Response

@@ -5,6 +5,13 @@ namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
+/**
+ * Validates requests to create a new exercise list with questions.
+ *
+ * Authorization: admins and professors. The lesson_id (if provided) must belong
+ * to the same class as the exercise list (scoped exists rule). At least one
+ * exercise question is required.
+ */
 class StoreExerciseListRequest extends FormRequest
 {
     public function authorize(): bool

@@ -4,6 +4,12 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
+/**
+ * Validates and authorizes requests to create a new lesson package.
+ *
+ * Admin-only. Expiration date must be in the future if provided;
+ * null expires_at means the package never expires.
+ */
 class StorePackageRequest extends FormRequest
 {
     public function authorize(): bool
