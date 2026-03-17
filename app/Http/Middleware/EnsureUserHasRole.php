@@ -24,6 +24,7 @@ class EnsureUserHasRole
      * @param Request  $request
      * @param Closure  $next
      * @param string   ...$roles Allowed role names (e.g., 'admin', 'professor', 'aluno')
+     * @return \Symfony\Component\HttpFoundation\Response
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {

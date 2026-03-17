@@ -21,11 +21,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property int $id
  * @property int $student_id
- * @property int|null $school_id                     Tenant scope
+ * @property int $school_id                          Tenant scope
  * @property int $total_lessons                      Total credits in this package
  * @property int $used_lessons                       Credits consumed; managed exclusively by RegisterLessonAction/DeleteLessonAction
  * @property string|null $price                      Package price (decimal:2), null if complimentary
- * @property string|null $currency                   ISO 4217 code (e.g., 'BRL')
+ * @property string $currency                        ISO 4217 currency code; NOT NULL, DB default 'BRL'
  * @property \Illuminate\Support\Carbon|null $purchased_at
  * @property \Illuminate\Support\Carbon|null $expires_at  Null means the package never expires
  * @property \Illuminate\Support\Carbon $created_at

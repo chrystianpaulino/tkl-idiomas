@@ -67,11 +67,19 @@ Register new route middleware aliases in `bootstrap/app.php` → `$middleware->a
 
 ### Action Classes
 
-All business logic lives in `app/Actions/`. Subdirectories: `Classes/`, `ExerciseLists/`, `Lessons/`, `Materials/`, `Packages/`, `Payments/`, `Schedules/`, `Users/`.
+All business logic lives in `app/Actions/`. Subdirectories: `Classes/`, `ExerciseLists/`, `Lessons/`, `Materials/`, `Packages/`, `Payments/`, `Schedules/`, `Schools/`, `Users/`.
 
 **Critical action — `RegisterLessonAction`:** Uses a DB transaction + `lockForUpdate()` on the `LessonPackage` to atomically increment `used_lessons` and create the lesson. Never bypass this with direct `increment()` calls outside the action.
 
 `used_lessons` on `LessonPackage` is also excluded from `$fillable`. It is only ever modified by `RegisterLessonAction` (increment) and `DeleteLessonAction` (decrement).
+
+**`RegisterPaymentAction::execute()`** takes 4 parameters: `User $student`, `LessonPackage $package`, `array $data`, `int $registeredBy`. The caller (controller) must pass `$request->user()->id` explicitly — the action does NOT call `Auth::id()` internally to avoid null FK issues in non-HTTP contexts.
+
+**`GetRevenueReportAction::execute(?int $schoolId)`** returns aggregate financial data. Always pass `auth()->user()->school_id` from the controller to enforce tenant isolation. Calling without `$schoolId` returns cross-school data (super-admin use only).
+
+**`GetDashboardStatsAction`** dispatches to `adminStats()`, `professorStats()`, or `alunoStats()` based on role. `professorStats()` returns a `classes` array (not `total_classes`). `alunoStats()` includes `payment_history` and `progress` (from `GetProgressStatsAction`).
+
+**`scopeNeedingPayment()` on `LessonPackage`** — finds packages with a price set AND no payment, regardless of exhaustion status. (Previously had an incorrect `used_lessons >= total_lessons` condition that excluded active unpaid packages — this was fixed.)
 
 ### Models
 
@@ -83,7 +91,7 @@ All business logic lives in `app/Actions/`. Subdirectories: `Classes/`, `Exercis
 | `LessonPackage` | `lesson_packages` | `scopeActive()` = not exhausted AND not expired (null expires_at = never expires); has `school_id` NOT NULL |
 | `Lesson` | `lessons` | `package_id` uses `restrictOnDelete()` — lessons are audit records and must not be destroyed when a package is deleted; has `school_id` NOT NULL |
 | `Material` | `materials` | `download_url` accessor via `Storage::disk('public')`; has `school_id` NOT NULL |
-| `Payment` | `payments` | Links `student_id` + `lesson_package_id`; fields: `amount`, `currency`, `method`, `paid_at`, `notes`; registered via `RegisterPaymentAction`; has `school_id` NOT NULL — set automatically in `RegisterPaymentAction` from `$package->school_id` |
+| `Payment` | `payments` | Links `student_id` + `lesson_package_id`; fields: `amount`, `currency`, `method`, `paid_at`, `notes`; registered via `RegisterPaymentAction`; has `school_id` NOT NULL — set automatically from `$package->school_id`; unique constraint on `lesson_package_id` (one payment per package); `isPaid()` uses `exists()` — call `$pkg->payment !== null` instead when `payment` is already eager-loaded |
 | `Schedule` | `schedules` | Recurring rule: `class_id`, `weekday` (0=Sun), `start_time`, `duration_minutes`, `active`; `weekdayName()` returns PT-BR day name |
 | `ScheduledLesson` | `scheduled_lessons` | Concrete lesson instance from a `Schedule`; `status`: `scheduled`/`confirmed`/`cancelled`; `lesson_id` set when confirmed; managed by `CreateScheduleAction`, `GenerateScheduledLessonsAction`, `ConfirmScheduledLessonAction`, `CancelScheduledLessonAction` |
 | `ExerciseList` | `exercise_lists` | Homework list assigned to a class (and optionally a lesson); `due_date` cast as `date`; `isOverdue()` uses `lt(today())` not `isPast()` (boundary: due today = not yet overdue) |
@@ -93,10 +101,29 @@ All business logic lives in `app/Actions/`. Subdirectories: `Classes/`, `Exercis
 
 `LessonPackage::scopeActive()` is used in `RegisterLessonAction` and `User::remaining_lessons` — any change here affects core billing logic.
 
+### Payment Module
+
+**Routes (all under `/admin` prefix, `admin.` name prefix, `role:admin` middleware):**
+- `GET /admin/users/{student}/payments` → `admin.payments.index` — packages + payment status for a student
+- `POST /admin/users/{student}/packages/{package}/payments` → `admin.payments.store` — register a payment
+- `GET /admin/payments/report` → `admin.payments.report` — aggregate revenue dashboard
+
+**Cross-tenant guard:** Both `index()` and `store()` verify `$student->school_id === auth()->user()->school_id` before proceeding (abort 403 on mismatch).
+
+**Pages:**
+- `resources/js/Pages/Payments/Index.jsx` — per-student package/payment table with inline payment form
+- `resources/js/Pages/Admin/PaymentReport.jsx` — revenue dashboard: 4 stat cards, bar chart (plain divs), method breakdown, recent payments table
+
+**Currency validation:** `StorePaymentRequest` enforces `in:BRL,USD,EUR` + `regex:/^[A-Z]{3}$/`.
+
+---
+
 ### Inertia Shared Props
 
 `HandleInertiaRequests` shares to all pages:
 - `auth.user` → `{ id, name, email, role }` (or `null`)
+- `auth.school` → `{ id, name, slug }` (or `null`)
+- `app_name` → value of `config('app.name')` (currently "EduGest")
 - `flash.success` / `flash.error` → lazy closures from session
 
 Flash messages are shown automatically by `AppLayout`. Set them in controllers via `session()->flash('success', '...')`.
@@ -123,12 +150,14 @@ For icons, use inline SVG (heroicons style, 24×24 viewBox, `strokeWidth={1.5}`,
 
 ### Route Organization
 
-Routes in `routes/web.php` use three nested groups:
-1. `auth + verified` — all authenticated users (dashboard, view classes, download)
-2. `role:admin,professor` — create/edit classes, register lessons, upload materials
-3. `role:admin` under `/admin` — user CRUD, package management, enrollment management
+Routes in `routes/web.php` are organized into four comment-delimited sections:
+1. **Compartilhadas** — dashboard + profile (all authenticated users)
+2. **Professor + Admin** — class/lesson/material/exercise-list CRUD — registered **before** the `{class}` wildcard routes to prevent "create" matching as an ID
+3. **Leitura** — read-only class/lesson/material/exercise-list routes (all authenticated)
+4. **Aluno** — exercise submission routes
+5. **Admin** (`/admin` prefix, `admin.` name prefix) — users, packages, enrollments, payments, schools
 
-**Important:** `/classes/create` is registered **before** `/classes/{class}` to prevent route conflicts. Maintain this ordering when adding new named routes.
+**Important:** `/classes/create` must remain registered before `/classes/{class}`. Maintain this ordering when adding new named routes.
 
 ### Testing
 
@@ -136,13 +165,29 @@ Routes in `routes/web.php` use three nested groups:
 - `SchoolFactory` has `inactive()` state
 - `LessonPackageFactory` has `expired()` and `exhausted()` states; `exhausted()` uses `afterCreating()` because `used_lessons` is not in `$fillable`
 - `ExerciseListFactory` has `overdue()` and `noDueDate()` states; `ExerciseSubmissionFactory` has `submitted()` state
+- `PaymentFactory` creates a coherent set (shared school + student + package + admin) in `definition()`. Use `forStudent(User $student)` state when you already have a student. Never call `Payment::factory()->create()` with only a partial override for `student_id` — the `lesson_package_id` will belong to the wrong student.
 - All factories that create tenant-scoped models include `school_id => School::factory()` by default
 - `LessonFactory` creates a shared school internally and threads `school_id` through professor, student, class, and package so all entities belong to the same school
+- When testing `RegisterPaymentAction`, pass `$admin->id` as the 4th argument: `->execute($student, $package, $data, $admin->id)`
 - Use `Storage::fake('public')` in tests that exercise file upload paths
 - `bee:code-reviewer` agent always fails (qwen model unavailable) — skip it, use the other 4 reviewers
+
+### PHPDoc Coverage
+
+All backend PHP files have comprehensive PHPDocs as of 2026-03-17:
+- **Models** — `@property` and `@property-read` annotations for all columns/accessors; relationship docs with business context
+- **Actions** — class-level docs explaining WHY the action exists; `@param`/`@return`/`@throws` on all public methods
+- **Controllers** — endpoint-level docs; cross-tenant guard notes
+- **FormRequests** — authorization rules and constraint explanations
+- **Policies** — per-ability docs; `before()` hook behavior documented
+- **Middleware** — guard logic and abort behavior explained
+
+When adding new code, maintain this documentation standard. Add `SUGGESTION:` inline comments for refactoring ideas rather than mixing them with functional changes.
 
 ### Database
 
 SQLite in `.env` at `database/database.sqlite`. Tests use SQLite in-memory (already configured in `phpunit.xml` — do not comment those lines out).
 
-Seed data: `admin@tkl.com` / `password`, 3 professors, 10 students each with a 20-lesson package, 1 class "Inglês Básico" with 5 enrolled students — all assigned to school id=1 (TKL Idiomas).
+Seed data: `admin@tkl.com` / `password`, 3 professors, 10 students each with a 20-lesson package, 1 class "Inglês Básico" with 5 enrolled students — all assigned to school id=1 (TKL Idiomas, slug: "tkl").
+
+`APP_NAME=EduGest` (platform name used in shared Inertia props and on the login page). The school name "TKL Idiomas" is data, not branding — it comes from the DB via `auth.school.name`.

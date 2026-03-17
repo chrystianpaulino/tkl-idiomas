@@ -56,7 +56,10 @@ class RegisterLessonAction
             $package->increment('used_lessons');
             $package->refresh(); // reload to get updated used_lessons
 
-            // Notify student about package status AFTER the transaction's credit decrement
+            // Notifications fire INSIDE the transaction. If Lesson::create() fails after this point
+            // and the transaction rolls back, these notifications will have already been dispatched --
+            // the student may receive a false "package exhausted" alert. Accepted trade-off;
+            // revisit if notification reliability becomes a requirement.
             if ($package->isExhausted()) {
                 $student->notify(new \App\Notifications\PackageFinished($package));
             } elseif ($package->remaining === 1) {

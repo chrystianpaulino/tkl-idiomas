@@ -26,7 +26,7 @@ class RegisterPaymentAction
      * @return Payment                    The created payment record
      *
      * @throws \InvalidArgumentException If amount is zero or negative
-     * @throws \Symfony\Component\HttpKernel\Exception\HttpException If package does not belong to student (403)
+     * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException  If package does not belong to student (abort 403)
      */
     public function execute(User $student, LessonPackage $package, array $data, int $registeredBy): Payment
     {

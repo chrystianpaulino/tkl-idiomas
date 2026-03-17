@@ -87,7 +87,9 @@ class PaymentController extends Controller
 
     /**
      * Admin revenue report: total revenue, monthly breakdown, per-method stats,
-     * paid/unpaid counts, and recent payments. Scoped to the admin's school.
+     * paid/unpaid counts, and recent payments. Scoped to `auth()->user()->school_id`.
+     * If the authenticated user has a null school_id (future super-admin), all
+     * schools' data is returned -- this is intentional for platform-level access.
      */
     public function report(GetRevenueReportAction $action)
     {

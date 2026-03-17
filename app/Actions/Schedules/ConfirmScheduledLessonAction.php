@@ -38,6 +38,7 @@ class ConfirmScheduledLessonAction
      *
      * @throws \LogicException    If the scheduled lesson is not in 'scheduled' status
      * @throws \RuntimeException  If no students are enrolled in the class
+     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException  Propagated from RegisterLessonAction when an enrolled student has no active lesson package at confirmation time
      */
     public function execute(ScheduledLesson $scheduledLesson, User $professor, array $data = []): Collection
     {
