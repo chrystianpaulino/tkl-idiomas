@@ -595,18 +595,23 @@ function AlunoDashboard({ stats }) {
 export default function Dashboard({ stats }) {
     const { auth } = usePage().props;
     const role = auth?.user?.role;
+    const firstName = auth?.user?.name?.split(' ')[0] ?? '';
 
     const greetings = {
+        school_admin: 'Painel Administrativo',
         admin: 'Painel Administrativo',
-        professor: `Bem-vindo, ${auth?.user?.name?.split(' ')[0] ?? 'Professor'}`,
-        aluno: `Bem-vindo, ${auth?.user?.name?.split(' ')[0] ?? 'Aluno'}`,
+        professor: `Bem-vindo, ${firstName || 'Professor'}`,
+        aluno: `Bem-vindo, ${firstName || 'Aluno'}`,
     };
 
     const subtitles = {
+        school_admin: 'Visao geral da escola',
         admin: 'Visao geral do sistema',
         professor: 'Aqui esta o resumo das suas atividades',
         aluno: 'Aqui esta o resumo do seu aprendizado',
     };
+
+    const isAdmin = role === 'admin' || role === 'school_admin';
 
     return (
         <AppLayout title="Dashboard">
@@ -617,7 +622,7 @@ export default function Dashboard({ stats }) {
                 <p className="text-sm text-gray-500 mt-1">{subtitles[role] ?? ''}</p>
             </div>
 
-            {role === 'admin' && <AdminDashboard stats={stats} />}
+            {isAdmin && <AdminDashboard stats={stats} />}
             {role === 'professor' && <ProfessorDashboard stats={stats} />}
             {role === 'aluno' && <AlunoDashboard stats={stats} />}
         </AppLayout>

@@ -1,10 +1,20 @@
 import { Link, usePage } from '@inertiajs/react';
 
 const navConfig = {
+    super_admin: [
+        { label: 'Dashboard', href: '/platform/dashboard', icon: '◈' },
+        { label: 'Escolas', href: '/platform/schools', icon: '⊟' },
+    ],
+    school_admin: [
+        { label: 'Dashboard', href: '/dashboard', icon: '◈' },
+        { label: 'Usuários', href: '/admin/users', icon: '◎' },
+        { label: 'Turmas', href: '/classes', icon: '⊞' },
+        { label: 'Relatório Financeiro', href: '/admin/payments/report', icon: '◇' },
+    ],
+    // legacy role — identical permissions to school_admin
     admin: [
         { label: 'Dashboard', href: '/dashboard', icon: '◈' },
         { label: 'Usuários', href: '/admin/users', icon: '◎' },
-        { label: 'Escolas', href: '/admin/schools', icon: '⊟' },
         { label: 'Turmas', href: '/classes', icon: '⊞' },
         { label: 'Relatório Financeiro', href: '/admin/payments/report', icon: '◇' },
     ],
@@ -18,8 +28,16 @@ const navConfig = {
     ],
 };
 
-const roleLabels = { admin: 'Administrador', professor: 'Professor', aluno: 'Aluno' };
+const roleLabels = {
+    super_admin: 'Dono da Plataforma',
+    school_admin: 'Administrador',
+    admin: 'Administrador',
+    professor: 'Professor',
+    aluno: 'Aluno',
+};
 const roleBadgeColors = {
+    super_admin: 'bg-violet-500/20 text-violet-300',
+    school_admin: 'bg-rose-500/20 text-rose-300',
     admin: 'bg-rose-500/20 text-rose-300',
     professor: 'bg-sky-500/20 text-sky-300',
     aluno: 'bg-emerald-500/20 text-emerald-300',
