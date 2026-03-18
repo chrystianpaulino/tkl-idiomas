@@ -1,6 +1,6 @@
 import AppLayout from '@/Layouts/AppLayout';
 import PageHeader from '@/Components/PageHeader';
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 
 function PlusIcon({ className }) {
     return (
@@ -19,9 +19,12 @@ function BuildingIcon({ className }) {
 }
 
 export default function SchoolsIndex({ schools = [] }) {
+    const { auth } = usePage().props;
+    const base = auth?.user?.role === 'super_admin' ? '/platform/schools' : '/admin/schools';
+
     function handleDelete(school) {
         if (!confirm(`Remover a escola "${school.name}"? Esta ação não pode ser desfeita.`)) return;
-        router.delete(`/admin/schools/${school.id}`);
+        router.delete(`${base}/${school.id}`);
     }
 
     return (
@@ -29,7 +32,7 @@ export default function SchoolsIndex({ schools = [] }) {
             <Head title="Escolas" />
             <PageHeader title="Escolas" subtitle="Gerenciar escolas do sistema">
                 <Link
-                    href="/admin/schools/create"
+                    href={`${base}/create`}
                     className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
                 >
                     <PlusIcon className="w-4 h-4" />
@@ -44,7 +47,7 @@ export default function SchoolsIndex({ schools = [] }) {
                     </div>
                     <p className="text-sm text-gray-500 mb-4">Nenhuma escola cadastrada.</p>
                     <Link
-                        href="/admin/schools/create"
+                        href={`${base}/create`}
                         className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
                     >
                         Criar Escola
@@ -96,7 +99,7 @@ export default function SchoolsIndex({ schools = [] }) {
                                     <td className="px-6 py-4">
                                         <div className="flex items-center gap-3 justify-end">
                                             <Link
-                                                href={`/admin/schools/${school.id}/edit`}
+                                                href={`${base}/${school.id}/edit`}
                                                 className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors"
                                             >
                                                 Editar

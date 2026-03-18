@@ -100,8 +100,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // ── Platform — gestão global da plataforma (super_admin only) ────────────────
+// SetTenantContext runs via web group — super_admin has school_id=null so no tenant is bound.
 
 Route::middleware(['auth', 'verified', 'role:super_admin'])->prefix('platform')->name('platform.')->group(function () {
+    Route::get('/dashboard', PlatformDashboardController::class)->name('dashboard');
     Route::resource('schools', SchoolController::class)->except(['show']);
 });
 

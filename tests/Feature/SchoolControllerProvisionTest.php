@@ -73,7 +73,7 @@ class SchoolControllerProvisionTest extends TestCase
         $response = $this->actingAs($superAdmin)
             ->post(route('platform.schools.store'), $this->validPayload());
 
-        $response->assertRedirect(route('admin.schools.index'));
+        $response->assertRedirect(route('platform.schools.index'));
         $response->assertSessionHas('success');
 
         $this->assertDatabaseHas('schools', [

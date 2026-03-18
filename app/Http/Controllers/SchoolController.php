@@ -20,6 +20,11 @@ use Inertia\Response;
  */
 class SchoolController extends Controller
 {
+    private function schoolsIndexRoute(): string
+    {
+        return auth()->user()->isSuperAdmin() ? 'platform.schools.index' : 'admin.schools.index';
+    }
+
     public function index(): Response
     {
         $query = School::withCount('users')->latest();
@@ -50,7 +55,7 @@ class SchoolController extends Controller
 
         $result = $action->execute($request->validated());
 
-        return redirect()->route('admin.schools.index')->with(
+        return redirect()->route($this->schoolsIndexRoute())->with(
             'success',
             "Escola \"{$result['school']->name}\" criada com administrador {$result['admin']->email}."
         );
@@ -73,7 +78,7 @@ class SchoolController extends Controller
 
         $action->execute($school, $request->validated());
 
-        return redirect()->route('admin.schools.index')->with('success', 'Escola atualizada com sucesso.');
+        return redirect()->route($this->schoolsIndexRoute())->with('success', 'Escola atualizada com sucesso.');
     }
 
     public function destroy(School $school): RedirectResponse
@@ -84,6 +89,6 @@ class SchoolController extends Controller
 
         $school->delete();
 
-        return redirect()->route('admin.schools.index')->with('success', 'Escola removida com sucesso.');
+        return redirect()->route($this->schoolsIndexRoute())->with('success', 'Escola removida com sucesso.');
     }
 }

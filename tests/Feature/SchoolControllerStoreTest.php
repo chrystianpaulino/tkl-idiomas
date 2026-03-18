@@ -72,7 +72,7 @@ class SchoolControllerStoreTest extends TestCase
         $response = $this->actingAs($superAdmin)
             ->post(route('platform.schools.store'), $this->validPayload());
 
-        $response->assertRedirect(route('admin.schools.index'));
+        $response->assertRedirect(route('platform.schools.index'));
 
         $this->assertDatabaseHas('schools', [
             'name' => 'Nova Escola',
@@ -103,7 +103,7 @@ class SchoolControllerStoreTest extends TestCase
                 'admin_email' => 'admin@sucesso.com',
             ]));
 
-        $response->assertRedirect(route('admin.schools.index'));
+        $response->assertRedirect(route('platform.schools.index'));
         $response->assertSessionHas('success');
 
         $flash = session('success');
@@ -152,7 +152,7 @@ class SchoolControllerStoreTest extends TestCase
             ]));
 
         $response->assertSessionHasNoErrors();
-        $response->assertRedirect(route('admin.schools.index'));
+        $response->assertRedirect(route('platform.schools.index'));
     }
 
     // ── Authorization: only super_admin may call store ───────────

@@ -1,8 +1,11 @@
 import AppLayout from '@/Layouts/AppLayout';
 import PageHeader from '@/Components/PageHeader';
-import { Head, useForm, Link } from '@inertiajs/react';
+import { Head, useForm, Link, usePage } from '@inertiajs/react';
 
 export default function SchoolsEdit({ school }) {
+    const { auth } = usePage().props;
+    const base = auth?.user?.role === 'super_admin' ? '/platform/schools' : '/admin/schools';
+
     const { data, setData, put, processing, errors } = useForm({
         name: school.name ?? '',
         slug: school.slug ?? '',
@@ -12,7 +15,7 @@ export default function SchoolsEdit({ school }) {
 
     function submit(e) {
         e.preventDefault();
-        put(`/admin/schools/${school.id}`);
+        put(`${base}/${school.id}`);
     }
 
     return (
@@ -20,7 +23,7 @@ export default function SchoolsEdit({ school }) {
             <Head title="Editar Escola" />
             <PageHeader title="Editar Escola" subtitle={school.name}>
                 <Link
-                    href="/admin/schools"
+                    href={base}
                     className="inline-flex items-center gap-2 border border-gray-300 hover:bg-gray-50 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors"
                 >
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -102,7 +105,7 @@ export default function SchoolsEdit({ school }) {
                     >
                         {processing ? 'Salvando...' : 'Salvar Alterações'}
                     </button>
-                    <Link href="/admin/schools" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    <Link href={base} className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
                         Cancelar
                     </Link>
                 </div>
