@@ -16,8 +16,12 @@ use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('dashboard');
-});
+    if (auth()->check()) {
+        $route = auth()->user()->isSuperAdmin() ? 'platform.dashboard' : 'dashboard';
+        return redirect()->route($route);
+    }
+    return inertia('Welcome');
+})->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
