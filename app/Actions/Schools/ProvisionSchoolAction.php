@@ -37,8 +37,8 @@ class ProvisionSchoolAction
             $school = School::create([
                 'name' => $data['name'],
                 'slug' => $data['slug'],
-                'email' => $data['email'],
-                'active' => true,
+                'email' => $data['email'] ?? null,
+                'active' => $data['active'] ?? true,
             ]);
 
             $admin = new User;
