@@ -18,7 +18,7 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-Route::middleware(['auth', 'verified', 'tenant'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
 
     // ── Compartilhadas — todos os papéis autenticados ────────────────────────
 
