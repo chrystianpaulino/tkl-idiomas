@@ -24,6 +24,10 @@ class LessonPackageController extends Controller
 {
     public function index(User $student): Response
     {
+        if (! auth()->user()->isSuperAdmin() && $student->school_id !== auth()->user()->school_id) {
+            abort(403);
+        }
+
         $packages = $student->lessonPackages()
             ->latest()
             ->get()
@@ -40,6 +44,10 @@ class LessonPackageController extends Controller
 
     public function store(StorePackageRequest $request, User $student, CreatePackageAction $action): RedirectResponse
     {
+        if (! auth()->user()->isSuperAdmin() && $student->school_id !== auth()->user()->school_id) {
+            abort(403);
+        }
+
         $action->execute($student, $request->validated());
 
         return back()->with('success', 'Pacote adicionado com sucesso.');
