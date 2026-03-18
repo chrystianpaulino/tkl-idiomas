@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 class GenerateScheduledLessons extends Command
 {
     protected $signature = 'schedules:generate {--weeks=4 : Number of weeks ahead to generate}';
+
     protected $description = 'Generate upcoming scheduled lesson slots for all active schedules';
 
     public function handle(GenerateScheduledLessonsAction $action): int
@@ -18,6 +19,7 @@ class GenerateScheduledLessons extends Command
         $count = $action->executeForAll($weeks);
 
         $this->info("Created {$count} new scheduled lesson slots.");
+
         return Command::SUCCESS;
     }
 }

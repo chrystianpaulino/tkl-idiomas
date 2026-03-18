@@ -46,7 +46,7 @@ class ExerciseListController extends Controller
             $query->with(['submissions' => fn ($q) => $q->where('student_id', $userId)]);
         }
 
-        $exerciseLists = $query->latest()->get()->map(function ($list) use ($isStudent, $userId) {
+        $exerciseLists = $query->latest()->get()->map(function ($list) use ($isStudent) {
             $data = $list->toArray();
             $data['is_overdue'] = $list->isOverdue();
 

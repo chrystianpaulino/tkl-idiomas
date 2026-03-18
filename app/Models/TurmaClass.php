@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToSchool;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * A teaching group (turma) that brings together one professor and multiple students.
@@ -17,23 +20,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property int $id
  * @property string $name
- * @property int $professor_id       Foreign key to the User who teaches this class
+ * @property int $professor_id Foreign key to the User who teaches this class
  * @property string|null $description
- * @property int|null $school_id     Tenant scope
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- *
+ * @property int|null $school_id Tenant scope
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read User $professor
- * @property-read \Illuminate\Database\Eloquent\Collection<int, User> $students
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Lesson> $lessons
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Material> $materials
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Schedule> $schedules
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ScheduledLesson> $scheduledLessons
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ExerciseList> $exerciseLists
+ * @property-read Collection<int, User> $students
+ * @property-read Collection<int, Lesson> $lessons
+ * @property-read Collection<int, Material> $materials
+ * @property-read Collection<int, Schedule> $schedules
+ * @property-read Collection<int, ScheduledLesson> $scheduledLessons
+ * @property-read Collection<int, ExerciseList> $exerciseLists
  */
 class TurmaClass extends Model
 {
-    use HasFactory;
+    use BelongsToSchool, HasFactory;
 
     protected $table = 'classes';
 
@@ -83,7 +85,7 @@ class TurmaClass extends Model
     /**
      * Recurring weekly schedule rules for this class (e.g., "every Monday at 14:00").
      */
-    public function schedules(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function schedules(): HasMany
     {
         return $this->hasMany(Schedule::class, 'class_id');
     }
@@ -91,7 +93,7 @@ class TurmaClass extends Model
     /**
      * Concrete lesson instances generated from recurring schedules.
      */
-    public function scheduledLessons(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function scheduledLessons(): HasMany
     {
         return $this->hasMany(ScheduledLesson::class, 'class_id');
     }

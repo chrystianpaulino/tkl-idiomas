@@ -15,6 +15,7 @@ class RegisterPaymentActionTest extends TestCase
     use RefreshDatabase;
 
     private User $admin;
+
     private RegisterPaymentAction $action;
 
     protected function setUp(): void
@@ -29,24 +30,24 @@ class RegisterPaymentActionTest extends TestCase
     {
         $student = User::factory()->create(); // default role = aluno
         $package = LessonPackage::factory()->create([
-            'student_id'    => $student->id,
+            'student_id' => $student->id,
             'total_lessons' => 4,
         ]);
 
         $payment = $this->action->execute($student, $package, [
-            'amount'  => '220.00',
-            'method'  => 'pix',
+            'amount' => '220.00',
+            'method' => 'pix',
             'paid_at' => '2026-03-01 10:00:00',
         ], $this->admin->id);
 
         $this->assertInstanceOf(Payment::class, $payment);
         $this->assertDatabaseHas('payments', [
-            'student_id'        => $student->id,
+            'student_id' => $student->id,
             'lesson_package_id' => $package->id,
-            'registered_by'     => $this->admin->id,
-            'amount'            => '220.00',
-            'method'            => 'pix',
-            'currency'          => 'BRL',
+            'registered_by' => $this->admin->id,
+            'amount' => '220.00',
+            'method' => 'pix',
+            'currency' => 'BRL',
         ]);
     }
 
@@ -58,8 +59,8 @@ class RegisterPaymentActionTest extends TestCase
 
         try {
             $this->action->execute($student, $package, [
-                'amount'  => '220.00',
-                'method'  => 'pix',
+                'amount' => '220.00',
+                'method' => 'pix',
                 'paid_at' => now()->toDateTimeString(),
             ], $this->admin->id);
 
@@ -75,8 +76,8 @@ class RegisterPaymentActionTest extends TestCase
         $package = LessonPackage::factory()->create(['student_id' => $student->id]);
 
         $payment = $this->action->execute($student, $package, [
-            'amount'  => '100.00',
-            'method'  => 'cash',
+            'amount' => '100.00',
+            'method' => 'cash',
             'paid_at' => now()->toDateTimeString(),
         ], $this->admin->id);
 
@@ -89,8 +90,8 @@ class RegisterPaymentActionTest extends TestCase
         $package = LessonPackage::factory()->create(['student_id' => $student->id]);
 
         $payment = $this->action->execute($student, $package, [
-            'amount'  => '220.00',
-            'method'  => 'pix',
+            'amount' => '220.00',
+            'method' => 'pix',
             'paid_at' => now()->toDateTimeString(),
         ], $this->admin->id);
 
@@ -106,8 +107,8 @@ class RegisterPaymentActionTest extends TestCase
         $this->expectExceptionMessage('Payment amount must be greater than zero.');
 
         $this->action->execute($student, $package, [
-            'amount'  => 0,
-            'method'  => 'pix',
+            'amount' => 0,
+            'method' => 'pix',
             'paid_at' => now()->toDateTimeString(),
         ], $this->admin->id);
     }
@@ -121,8 +122,8 @@ class RegisterPaymentActionTest extends TestCase
         $this->expectExceptionMessage('Payment amount must be greater than zero.');
 
         $this->action->execute($student, $package, [
-            'amount'  => -50,
-            'method'  => 'pix',
+            'amount' => -50,
+            'method' => 'pix',
             'paid_at' => now()->toDateTimeString(),
         ], $this->admin->id);
     }

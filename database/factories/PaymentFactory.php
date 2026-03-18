@@ -15,15 +15,15 @@ class PaymentFactory extends Factory
     public function definition(): array
     {
         return [
-            'student_id'        => User::factory()->state(['role' => 'aluno']),
+            'student_id' => User::factory()->state(['role' => 'aluno']),
             'lesson_package_id' => LessonPackage::factory(),
-            'registered_by'     => User::factory()->admin(),
-            'amount'            => $this->faker->randomFloat(2, 50, 2000),
-            'currency'          => 'BRL',
-            'method'            => $this->faker->randomElement(['pix', 'cash', 'card', 'transfer', 'other']),
-            'paid_at'           => $this->faker->dateTimeBetween('-3 months', 'now'),
-            'notes'             => $this->faker->optional(0.3)->sentence(),
-            'school_id'         => School::factory(),
+            'registered_by' => User::factory()->admin(),
+            'amount' => $this->faker->randomFloat(2, 50, 2000),
+            'currency' => 'BRL',
+            'method' => $this->faker->randomElement(['pix', 'cash', 'card', 'transfer', 'other']),
+            'paid_at' => $this->faker->dateTimeBetween('-3 months', 'now'),
+            'notes' => $this->faker->optional(0.3)->sentence(),
+            'school_id' => School::factory(),
         ];
     }
 
@@ -35,13 +35,13 @@ class PaymentFactory extends Factory
         return $this->state(function () use ($student) {
             $package = LessonPackage::factory()->create([
                 'student_id' => $student->id,
-                'school_id'  => $student->school_id,
+                'school_id' => $student->school_id,
             ]);
 
             return [
-                'student_id'        => $student->id,
+                'student_id' => $student->id,
                 'lesson_package_id' => $package->id,
-                'school_id'         => $student->school_id,
+                'school_id' => $student->school_id,
             ];
         });
     }

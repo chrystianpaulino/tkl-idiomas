@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToSchool;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * A homework/exercise list assigned to all students in a class.
@@ -16,23 +19,22 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property int $id
  * @property int $class_id
- * @property int|null $lesson_id           Optional link to the lesson this homework relates to
- * @property int $created_by               The professor or admin who created this list
+ * @property int|null $lesson_id Optional link to the lesson this homework relates to
+ * @property int $created_by The professor or admin who created this list
  * @property string $title
  * @property string|null $description
- * @property \Illuminate\Support\Carbon|null $due_date  Null means no deadline
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- *
+ * @property Carbon|null $due_date Null means no deadline
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read TurmaClass $turmaClass
  * @property-read Lesson|null $lesson
  * @property-read User $creator
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Exercise> $exercises
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ExerciseSubmission> $submissions
+ * @property-read Collection<int, Exercise> $exercises
+ * @property-read Collection<int, ExerciseSubmission> $submissions
  */
 class ExerciseList extends Model
 {
-    use HasFactory;
+    use BelongsToSchool, HasFactory;
 
     protected $fillable = [
         'class_id',
@@ -41,6 +43,7 @@ class ExerciseList extends Model
         'title',
         'description',
         'due_date',
+        'school_id',
     ];
 
     protected function casts(): array

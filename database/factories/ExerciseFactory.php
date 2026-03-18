@@ -12,7 +12,7 @@ class ExerciseFactory extends Factory
         return [
             'exercise_list_id' => ExerciseList::factory(),
             'order' => 1,
-            'question' => $this->faker->sentence() . '?',
+            'question' => $this->faker->sentence().'?',
             'type' => 'text',
         ];
     }

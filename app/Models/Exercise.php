@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * An individual question within an ExerciseList.
@@ -16,14 +18,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property int $id
  * @property int $exercise_list_id
- * @property int $order               Display position within the list (1-based)
- * @property string $question          The question text
- * @property string $type              Answer type: 'text' or 'file'
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- *
+ * @property int $order Display position within the list (1-based)
+ * @property string $question The question text
+ * @property string $type Answer type: 'text' or 'file'
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read ExerciseList $exerciseList
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ExerciseAnswer> $answers
+ * @property-read Collection<int, ExerciseAnswer> $answers
  */
 class Exercise extends Model
 {

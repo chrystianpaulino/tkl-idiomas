@@ -25,7 +25,7 @@ class LessonCancelled extends Notification implements ShouldQueue
         $reason = $this->scheduledLesson->cancelled_reason;
 
         return (new MailMessage)
-            ->subject('Aula cancelada — ' . $date)
+            ->subject('Aula cancelada — '.$date)
             ->greeting("Olá, {$notifiable->name}!")
             ->line("A aula do dia **{$date}** foi cancelada.")
             ->when($reason, fn ($mail) => $mail->line("Motivo: {$reason}"))

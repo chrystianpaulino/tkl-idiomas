@@ -21,7 +21,7 @@ class GetProgressStatsAction
     private const MILESTONES = [10, 20, 30, 40, 50, 75, 100, 150, 200];
 
     /**
-     * @param User $student The student to compute progress stats for
+     * @param  User  $student  The student to compute progress stats for
      * @return array{lessonsCompleted: int, hoursStudied: float, currentStreak: int, nextMilestone: int|null, milestoneProgress: int|float}
      */
     public function execute(User $student): array
@@ -36,9 +36,9 @@ class GetProgressStatsAction
 
         return [
             'lessonsCompleted' => $lessonsCompleted,
-            'hoursStudied'     => $hoursStudied,
-            'currentStreak'    => $currentStreak,
-            'nextMilestone'    => $nextMilestone,
+            'hoursStudied' => $hoursStudied,
+            'currentStreak' => $currentStreak,
+            'nextMilestone' => $nextMilestone,
             'milestoneProgress' => $milestoneProgress,
         ];
     }
@@ -60,9 +60,9 @@ class GetProgressStatsAction
             ->where('status', 'completed')
             ->whereNotIn('id', function ($q) {
                 $q->select('lesson_id')
-                  ->from('scheduled_lessons')
-                  ->whereNotNull('lesson_id')
-                  ->whereNotNull('schedule_id');
+                    ->from('scheduled_lessons')
+                    ->whereNotNull('lesson_id')
+                    ->whereNotNull('schedule_id');
             })
             ->count();
 
@@ -82,7 +82,7 @@ class GetProgressStatsAction
             ->where('status', 'completed')
             ->selectRaw("strftime('%Y-%W', conducted_at) as week")
             ->distinct()
-            ->orderByRaw("week DESC")
+            ->orderByRaw('week DESC')
             ->pluck('week')
             ->toArray();
 
@@ -92,17 +92,17 @@ class GetProgressStatsAction
 
         $streak = 1;
         $current = Carbon::now()->startOfWeek();
-        $currentWeekKey = $current->format('Y') . '-' . str_pad($current->format('W'), 2, '0', STR_PAD_LEFT);
+        $currentWeekKey = $current->format('Y').'-'.str_pad($current->format('W'), 2, '0', STR_PAD_LEFT);
 
         $mostRecent = $weeks[0];
-        $lastWeekKey = $current->copy()->subWeek()->format('Y') . '-' . str_pad($current->copy()->subWeek()->format('W'), 2, '0', STR_PAD_LEFT);
+        $lastWeekKey = $current->copy()->subWeek()->format('Y').'-'.str_pad($current->copy()->subWeek()->format('W'), 2, '0', STR_PAD_LEFT);
 
         if ($mostRecent !== $currentWeekKey && $mostRecent !== $lastWeekKey) {
             return 0;
         }
 
         for ($i = 1; $i < count($weeks); $i++) {
-            $expected = $current->copy()->subWeeks($i)->format('Y') . '-' . str_pad($current->copy()->subWeeks($i)->format('W'), 2, '0', STR_PAD_LEFT);
+            $expected = $current->copy()->subWeeks($i)->format('Y').'-'.str_pad($current->copy()->subWeeks($i)->format('W'), 2, '0', STR_PAD_LEFT);
             if ($weeks[$i] === $expected) {
                 $streak++;
             } else {
@@ -116,7 +116,7 @@ class GetProgressStatsAction
     /**
      * Find the next milestone and compute percentage progress toward it.
      *
-     * @param int $completed Total completed lessons
+     * @param  int  $completed  Total completed lessons
      * @return array{0: int|null, 1: int|float} [nextMilestone, progressPercent] -- null milestone means all milestones achieved
      */
     private function calculateMilestone(int $completed): array
@@ -131,6 +131,7 @@ class GetProgressStatsAction
                 }
                 $range = $milestone - $previous;
                 $progress = $range > 0 ? round((($completed - $previous) / $range) * 100) : 100;
+
                 return [$milestone, $progress];
             }
         }

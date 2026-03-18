@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -17,11 +18,10 @@ use Illuminate\Support\Facades\Storage;
  * @property int $id
  * @property int $exercise_submission_id
  * @property int $exercise_id
- * @property string|null $answer_text        Free-text answer (for 'text' type exercises)
- * @property string|null $file_path          Relative path on the 'public' disk (for 'file' type exercises)
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- *
+ * @property string|null $answer_text Free-text answer (for 'text' type exercises)
+ * @property string|null $file_path Relative path on the 'public' disk (for 'file' type exercises)
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read string|null $file_url      Full public URL for the uploaded file, or null if no file
  * @property-read ExerciseSubmission $submission
  * @property-read Exercise $exercise

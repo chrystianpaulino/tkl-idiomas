@@ -14,9 +14,9 @@ use App\Models\User;
 class CreateClassAction
 {
     /**
-     * @param array $data      Validated data: name (required), description (optional)
-     * @param User  $professor The professor to assign as the class teacher
-     * @return TurmaClass      The newly created class
+     * @param  array  $data  Validated data: name (required), description (optional)
+     * @param  User  $professor  The professor to assign as the class teacher
+     * @return TurmaClass The newly created class
      */
     public function execute(array $data, User $professor): TurmaClass
     {

@@ -43,7 +43,7 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request, CreateUserAction $action): RedirectResponse
     {
-        $user = $action->execute($request->validated());
+        $user = $action->execute(array_merge($request->validated(), ['school_id' => $request->user()->school_id]));
 
         return redirect()->route('admin.users.show', $user)->with('success', 'Usuário criado com sucesso.');
     }

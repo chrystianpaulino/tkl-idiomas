@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Carbon;
 
 /**
  * A student's lesson credit package -- the core billing unit of the platform.
@@ -21,27 +25,26 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property int $id
  * @property int $student_id
- * @property int $school_id                          Tenant scope
- * @property int $total_lessons                      Total credits in this package
- * @property int $used_lessons                       Credits consumed; managed exclusively by RegisterLessonAction/DeleteLessonAction
- * @property string|null $price                      Package price (decimal:2), null if complimentary
- * @property string $currency                        ISO 4217 currency code; NOT NULL, DB default 'BRL'
- * @property \Illuminate\Support\Carbon|null $purchased_at
- * @property \Illuminate\Support\Carbon|null $expires_at  Null means the package never expires
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- *
+ * @property int $school_id Tenant scope
+ * @property int $total_lessons Total credits in this package
+ * @property int $used_lessons Credits consumed; managed exclusively by RegisterLessonAction/DeleteLessonAction
+ * @property string|null $price Package price (decimal:2), null if complimentary
+ * @property string $currency ISO 4217 currency code; NOT NULL, DB default 'BRL'
+ * @property Carbon|null $purchased_at
+ * @property Carbon|null $expires_at Null means the package never expires
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read int $remaining                     Computed: max(0, total_lessons - used_lessons)
  * @property-read User $student
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Lesson> $lessons
+ * @property-read Collection<int, Lesson> $lessons
  * @property-read Payment|null $payment
  *
- * @method static \Illuminate\Database\Eloquent\Builder active()          Packages with remaining credits and not expired
- * @method static \Illuminate\Database\Eloquent\Builder needingPayment()  Priced packages without an associated payment
+ * @method static \Illuminate\Database\Eloquent\Builder active() Packages with remaining credits and not expired
+ * @method static \Illuminate\Database\Eloquent\Builder needingPayment() Priced packages without an associated payment
  */
 class LessonPackage extends Model
 {
-    use HasFactory;
+    use BelongsToSchool, HasFactory;
 
     // NOTE: 'used_lessons' is intentionally NOT in $fillable. Modify only via RegisterLessonAction/DeleteLessonAction.
     protected $fillable = [
@@ -76,7 +79,7 @@ class LessonPackage extends Model
             ->whereColumn('used_lessons', '<', 'total_lessons')
             ->where(function (Builder $q) {
                 $q->whereNull('expires_at')
-                  ->orWhere('expires_at', '>', now());
+                    ->orWhere('expires_at', '>', now());
             });
     }
 
@@ -112,7 +115,7 @@ class LessonPackage extends Model
      */
     public function isActive(): bool
     {
-        return !$this->isExhausted() && !$this->isExpired();
+        return ! $this->isExhausted() && ! $this->isExpired();
     }
 
     // ── Relationships ─────────────────────────────────────────────
@@ -138,7 +141,7 @@ class LessonPackage extends Model
      * The payment record associated with this package (one-to-one).
      * A package may not have a payment yet if it is unpaid.
      */
-    public function payment(): \Illuminate\Database\Eloquent\Relations\HasOne
+    public function payment(): HasOne
     {
         return $this->hasOne(Payment::class, 'lesson_package_id');
     }
@@ -155,9 +158,9 @@ class LessonPackage extends Model
      * Scope to packages that have a price set but no payment record yet,
      * indicating the student still owes payment.
      */
-    public function scopeNeedingPayment(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    public function scopeNeedingPayment(Builder $query): Builder
     {
         return $query->whereNotNull('price')
-                     ->whereDoesntHave('payment');
+            ->whereDoesntHave('payment');
     }
 }

@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\Storage;
 class DeleteExerciseListAction
 {
     /**
-     * @param ExerciseList $list The list to delete (all submissions, answers, and files will be removed)
+     * @param  ExerciseList  $list  The list to delete (all submissions, answers, and files will be removed)
      */
     public function execute(ExerciseList $list): void
     {

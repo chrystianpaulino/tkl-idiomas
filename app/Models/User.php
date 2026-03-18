@@ -3,11 +3,15 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Database\Factories\UserFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 
 /**
  * Represents any person using the platform: admin, professor, or student (aluno).
@@ -24,31 +28,32 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $name
  * @property string $email
  * @property string $password
- * @property string $role                          One of: 'admin', 'professor', 'aluno'
- * @property int|null $school_id                   Tenant scope; null for legacy/unscoped users
+ * @property string $role One of: 'super_admin', 'school_admin', 'admin', 'professor', 'aluno'
+ * @property int|null $school_id Tenant scope; null for legacy/unscoped users
  * @property string|null $phone
- * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property Carbon|null $email_verified_at
  * @property string|null $remember_token
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- *
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read int $remaining_lessons           Sum of remaining credits across all active packages
  * @property-read School|null $school
- * @property-read \Illuminate\Database\Eloquent\Collection<int, TurmaClass> $taughtClasses
- * @property-read \Illuminate\Database\Eloquent\Collection<int, TurmaClass> $enrolledClasses
- * @property-read \Illuminate\Database\Eloquent\Collection<int, LessonPackage> $lessonPackages
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Lesson> $lessons
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Payment> $payments
+ * @property-read Collection<int, TurmaClass> $taughtClasses
+ * @property-read Collection<int, TurmaClass> $enrolledClasses
+ * @property-read Collection<int, LessonPackage> $lessonPackages
+ * @property-read Collection<int, Lesson> $lessons
+ * @property-read Collection<int, Payment> $payments
  */
 class User extends Authenticatable
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
     /**
      * The attributes that are mass assignable.
      *
-     * NOTE: 'role' is intentionally NOT in $fillable to prevent privilege escalation.
+     * NOTE: 'role' and 'school_id' are intentionally NOT in $fillable to prevent
+     * privilege escalation and unauthorized tenant reassignment. Both must be set
+     * via direct attribute assignment in action classes.
      *
      * @var list<string>
      */
@@ -56,7 +61,6 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'school_id',
         'phone',
     ];
 
@@ -82,9 +86,31 @@ class User extends Authenticatable
 
     // ── Role helpers ──────────────────────────────────────────────
 
+    /**
+     * Whether this user is a platform-level super administrator (no school scope).
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    /**
+     * Whether this user is a school-level administrator (scoped to one school).
+     */
+    public function isSchoolAdmin(): bool
+    {
+        return $this->role === 'school_admin';
+    }
+
+    /**
+     * Whether this user has administrative privileges.
+     *
+     * Returns true for both the legacy 'admin' role AND the new 'school_admin' role
+     * to maintain backward compatibility during the SaaS migration.
+     */
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return in_array($this->role, ['admin', 'school_admin']);
     }
 
     public function isProfessor(): bool
@@ -102,7 +128,7 @@ class User extends Authenticatable
     /**
      * The school (tenant) this user belongs to.
      */
-    public function school(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function school(): BelongsTo
     {
         return $this->belongsTo(School::class);
     }
@@ -161,7 +187,7 @@ class User extends Authenticatable
     /**
      * Payment records where this user is the paying student.
      */
-    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function payments(): HasMany
     {
         return $this->hasMany(Payment::class, 'student_id');
     }

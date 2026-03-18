@@ -2,6 +2,16 @@
 
 namespace App\Providers;
 
+use App\Models\ExerciseList;
+use App\Models\Lesson;
+use App\Models\Material;
+use App\Models\Payment;
+use App\Models\TurmaClass;
+use App\Policies\ClassPolicy;
+use App\Policies\ExerciseListPolicy;
+use App\Policies\LessonPolicy;
+use App\Policies\MaterialPolicy;
+use App\Policies\PaymentPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -32,10 +42,10 @@ class AppServiceProvider extends ServiceProvider
         Vite::prefetch(concurrency: 3);
 
         // Manual policy registration (auto-discovery is NOT active)
-        Gate::policy(\App\Models\TurmaClass::class, \App\Policies\ClassPolicy::class);
-        Gate::policy(\App\Models\Lesson::class, \App\Policies\LessonPolicy::class);
-        Gate::policy(\App\Models\Material::class, \App\Policies\MaterialPolicy::class);
-        Gate::policy(\App\Models\Payment::class, \App\Policies\PaymentPolicy::class);
-        Gate::policy(\App\Models\ExerciseList::class, \App\Policies\ExerciseListPolicy::class);
+        Gate::policy(TurmaClass::class, ClassPolicy::class);
+        Gate::policy(Lesson::class, LessonPolicy::class);
+        Gate::policy(Material::class, MaterialPolicy::class);
+        Gate::policy(Payment::class, PaymentPolicy::class);
+        Gate::policy(ExerciseList::class, ExerciseListPolicy::class);
     }
 }

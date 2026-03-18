@@ -27,10 +27,10 @@ use Illuminate\Support\Facades\Storage;
 class SubmitExerciseListAction
 {
     /**
-     * @param ExerciseList $list    The exercise list being answered
-     * @param User         $student The student submitting answers
-     * @param array        $data    Validated data: answers[] keyed by exercise_id, each with answer_text and/or file
-     * @return ExerciseSubmission   The submission with answers eager-loaded
+     * @param  ExerciseList  $list  The exercise list being answered
+     * @param  User  $student  The student submitting answers
+     * @param  array  $data  Validated data: answers[] keyed by exercise_id, each with answer_text and/or file
+     * @return ExerciseSubmission The submission with answers eager-loaded
      *
      * @throws \RuntimeException If a file upload fails
      */

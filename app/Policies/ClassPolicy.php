@@ -18,6 +18,18 @@ use App\Models\User;
 class ClassPolicy
 {
     /**
+     * Super-admins bypass all policy checks for cross-school management.
+     */
+    public function before(User $user, string $ability): ?bool
+    {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        return null;
+    }
+
+    /**
      * All authenticated users can see the class listing page.
      * Row-level filtering happens in ClassController::index.
      */

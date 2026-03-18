@@ -5,6 +5,7 @@ namespace App\Actions\Payments;
 use App\Models\LessonPackage;
 use App\Models\Payment;
 use App\Models\User;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
  * Records a payment for a student's lesson package.
@@ -19,14 +20,14 @@ use App\Models\User;
 class RegisterPaymentAction
 {
     /**
-     * @param User          $student      The student making the payment
-     * @param LessonPackage $package      The package being paid for (must belong to $student)
-     * @param array         $data         Validated data: amount, method, paid_at, notes, currency
-     * @param int           $registeredBy User ID of the admin recording this payment
-     * @return Payment                    The created payment record
+     * @param  User  $student  The student making the payment
+     * @param  LessonPackage  $package  The package being paid for (must belong to $student)
+     * @param  array  $data  Validated data: amount, method, paid_at, notes, currency
+     * @param  int  $registeredBy  User ID of the admin recording this payment
+     * @return Payment The created payment record
      *
      * @throws \InvalidArgumentException If amount is zero or negative
-     * @throws \Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException  If package does not belong to student (abort 403)
+     * @throws AccessDeniedHttpException If package does not belong to student (abort 403)
      */
     public function execute(User $student, LessonPackage $package, array $data, int $registeredBy): Payment
     {
@@ -39,15 +40,15 @@ class RegisterPaymentAction
         }
 
         return Payment::create([
-            'student_id'        => $student->id,
+            'student_id' => $student->id,
             'lesson_package_id' => $package->id,
-            'registered_by'     => $registeredBy,
-            'amount'            => $data['amount'],
-            'currency'          => $data['currency'] ?? 'BRL',
-            'method'            => $data['method'] ?? 'pix',
-            'paid_at'           => $data['paid_at'],
-            'notes'             => $data['notes'] ?? null,
-            'school_id'         => $package->school_id,
+            'registered_by' => $registeredBy,
+            'amount' => $data['amount'],
+            'currency' => $data['currency'] ?? 'BRL',
+            'method' => $data['method'] ?? 'pix',
+            'paid_at' => $data['paid_at'],
+            'notes' => $data['notes'] ?? null,
+            'school_id' => $package->school_id,
         ]);
     }
 }

@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -16,21 +18,20 @@ use Illuminate\Support\Facades\Storage;
  *
  * @property int $id
  * @property int $class_id
- * @property int $uploaded_by         Foreign key to the User who uploaded this material
+ * @property int $uploaded_by Foreign key to the User who uploaded this material
  * @property string $title
- * @property string $file_path        Relative path within the 'public' storage disk
+ * @property string $file_path Relative path within the 'public' storage disk
  * @property string|null $description
  * @property int|null $school_id
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- *
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read string $download_url  Full URL to download the file from public storage
  * @property-read TurmaClass $turmaClass
  * @property-read User $uploader
  */
 class Material extends Model
 {
-    use HasFactory;
+    use BelongsToSchool, HasFactory;
 
     protected $fillable = [
         'class_id',

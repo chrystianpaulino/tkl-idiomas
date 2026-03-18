@@ -18,16 +18,19 @@ use Illuminate\Support\Facades\Hash;
 class CreateUserAction
 {
     /**
-     * @param array $data Validated data: name, email, password, role (admin|professor|aluno)
-     * @return User       The persisted user with role assigned
+     * @param  array  $data  Validated data: name, email, password, role, school_id (optional)
+     * @return User The persisted user with role assigned
      */
     public function execute(array $data): User
     {
-        $user = new User();
+        $user = new User;
         $user->name = $data['name'];
         $user->email = $data['email'];
         $user->password = Hash::make($data['password']);
         $user->role = $data['role'];
+        if (isset($data['school_id'])) {
+            $user->school_id = $data['school_id'];
+        }
         $user->save();
 
         return $user;

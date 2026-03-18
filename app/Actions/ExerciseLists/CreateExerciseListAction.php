@@ -20,10 +20,10 @@ use Illuminate\Support\Facades\DB;
 class CreateExerciseListAction
 {
     /**
-     * @param TurmaClass $class   The class to assign this exercise list to
-     * @param User       $creator The professor or admin creating the list
-     * @param array      $data    Validated data: title, description, due_date, lesson_id, exercises[]
-     * @return ExerciseList       The created list with exercises eager-loaded
+     * @param  TurmaClass  $class  The class to assign this exercise list to
+     * @param  User  $creator  The professor or admin creating the list
+     * @param  array  $data  Validated data: title, description, due_date, lesson_id, exercises[]
+     * @return ExerciseList The created list with exercises eager-loaded
      */
     public function execute(TurmaClass $class, User $creator, array $data): ExerciseList
     {

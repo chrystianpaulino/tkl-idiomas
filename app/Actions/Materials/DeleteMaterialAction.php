@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 class DeleteMaterialAction
 {
     /**
-     * @param Material $material The material to delete (file will be removed from disk)
+     * @param  Material  $material  The material to delete (file will be removed from disk)
      */
     public function execute(Material $material): void
     {

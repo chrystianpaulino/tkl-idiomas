@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * A student's submission for an exercise list (one per student per list).
@@ -17,14 +19,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property int $exercise_list_id
  * @property int $student_id
- * @property \Illuminate\Support\Carbon|null $submitted_at  Set once on first submission; preserved on re-submits
- * @property bool $completed                                Whether all answers have been provided
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- *
+ * @property Carbon|null $submitted_at Set once on first submission; preserved on re-submits
+ * @property bool $completed Whether all answers have been provided
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read ExerciseList $exerciseList
  * @property-read User $student
- * @property-read \Illuminate\Database\Eloquent\Collection<int, ExerciseAnswer> $answers
+ * @property-read Collection<int, ExerciseAnswer> $answers
  */
 class ExerciseSubmission extends Model
 {

@@ -17,8 +17,8 @@ use App\Models\User;
 class CreatePackageAction
 {
     /**
-     * @param User  $student The student who will own this package
-     * @param array $data    Validated data: total_lessons (required), expires_at (optional)
+     * @param  User  $student  The student who will own this package
+     * @param  array  $data  Validated data: total_lessons (required), expires_at (optional)
      * @return LessonPackage The newly created package with 0 used lessons
      */
     public function execute(User $student, array $data): LessonPackage
@@ -27,6 +27,7 @@ class CreatePackageAction
             'student_id' => $student->id,
             'total_lessons' => $data['total_lessons'],
             'expires_at' => $data['expires_at'] ?? null,
+            'school_id' => $student->school_id,
         ]);
     }
 }

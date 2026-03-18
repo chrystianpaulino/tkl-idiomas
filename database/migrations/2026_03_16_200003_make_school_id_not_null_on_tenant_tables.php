@@ -28,8 +28,8 @@ return new class extends Migration
             $nullCount = DB::table($table)->whereNull('school_id')->count();
 
             if ($nullCount > 0) {
-                throw new \RuntimeException(
-                    "Cannot enforce NOT NULL: {$nullCount} record(s) in '{$table}' have school_id = NULL. " .
+                throw new RuntimeException(
+                    "Cannot enforce NOT NULL: {$nullCount} record(s) in '{$table}' have school_id = NULL. ".
                     'Run migration 200002 first and verify all records are assigned to a school.'
                 );
             }

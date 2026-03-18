@@ -166,10 +166,10 @@ class GetRevenueReportActionTest extends TestCase
         for ($i = 0; $i < 15; $i++) {
             $pkg = LessonPackage::factory()->create(['student_id' => $student->id]);
             Payment::factory()->create([
-                'student_id'        => $student->id,
+                'student_id' => $student->id,
                 'lesson_package_id' => $pkg->id,
-                'registered_by'     => $admin->id,
-                'school_id'         => $student->school_id,
+                'registered_by' => $admin->id,
+                'school_id' => $student->school_id,
             ]);
         }
 
@@ -205,18 +205,18 @@ class GetRevenueReportActionTest extends TestCase
         $pkgNew = LessonPackage::factory()->create(['student_id' => $student->id]);
 
         Payment::factory()->create([
-            'student_id'        => $student->id,
+            'student_id' => $student->id,
             'lesson_package_id' => $pkgOld->id,
-            'registered_by'     => $admin->id,
-            'paid_at'           => '2026-01-10',
-            'school_id'         => $student->school_id,
+            'registered_by' => $admin->id,
+            'paid_at' => '2026-01-10',
+            'school_id' => $student->school_id,
         ]);
         Payment::factory()->create([
-            'student_id'        => $student->id,
+            'student_id' => $student->id,
             'lesson_package_id' => $pkgNew->id,
-            'registered_by'     => $admin->id,
-            'paid_at'           => '2026-03-10',
-            'school_id'         => $student->school_id,
+            'registered_by' => $admin->id,
+            'paid_at' => '2026-03-10',
+            'school_id' => $student->school_id,
         ]);
 
         $result = $this->action->execute();

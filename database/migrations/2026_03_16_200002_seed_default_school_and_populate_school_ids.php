@@ -28,10 +28,10 @@ return new class extends Migration
             $schoolId = $existing->id;
         } else {
             $schoolId = DB::table('schools')->insertGetId([
-                'name'       => 'TKL Idiomas',
-                'slug'       => 'tkl',
-                'email'      => null,
-                'active'     => true,
+                'name' => 'TKL Idiomas',
+                'slug' => 'tkl',
+                'email' => null,
+                'active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -105,8 +105,8 @@ return new class extends Migration
             $nullCount = DB::table($table)->whereNull('school_id')->count();
 
             if ($nullCount > 0) {
-                throw new \RuntimeException(
-                    "Migration failed: {$nullCount} record(s) in '{$table}' still have school_id = NULL. " .
+                throw new RuntimeException(
+                    "Migration failed: {$nullCount} record(s) in '{$table}' still have school_id = NULL. ".
                     'Investigate before applying the NOT NULL constraint.'
                 );
             }

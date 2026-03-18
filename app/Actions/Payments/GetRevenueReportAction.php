@@ -10,13 +10,23 @@ use App\Models\User;
  * Generates a revenue report for the admin payment dashboard.
  *
  * Computes total revenue, monthly breakdown, per-method breakdown, paid/unpaid
- * package counts, and recent payment history. All queries are tenant-scoped when
- * a schoolId is provided. Uses SQLite-compatible strftime for date grouping.
+ * package counts, and recent payment history. Uses SQLite-compatible strftime
+ * for date grouping.
+ *
+ * Tenant scoping behaviour:
+ * - When called without $schoolId (super_admin): the BelongsToSchool global scope
+ *   is inactive (no tenant context), so queries return data across all schools.
+ * - When called with $schoolId (school_admin): both the BelongsToSchool global scope
+ *   AND the explicit where('school_id', $schoolId) apply. This is intentionally
+ *   idempotent (WHERE x = 1 AND x = 1) and harmless -- the explicit filter ensures
+ *   correct behaviour even if the global scope is bypassed or inactive.
  */
 class GetRevenueReportAction
 {
     /**
-     * @param int|null $schoolId Scope the report to a specific school, or null for all schools
+     * @param  int|null  $schoolId  Explicit school filter. When null (super_admin), returns
+     *                              cross-school data. When set (school_admin), applies an explicit
+     *                              WHERE alongside the BelongsToSchool global scope (idempotent).
      * @return array{total_revenue: float, revenue_by_month: array, by_method: array, paid_packages_count: int, unpaid_packages_count: int, total_students: int, recent_payments: array}
      */
     public function execute(?int $schoolId = null): array
@@ -38,7 +48,7 @@ class GetRevenueReportAction
             ->selectRaw("strftime('%m/%Y', paid_at) as month, SUM(amount) as total")
             ->whereNotNull('paid_at')
             ->groupByRaw("strftime('%m/%Y', paid_at)")
-            ->orderByRaw("MIN(paid_at) ASC")
+            ->orderByRaw('MIN(paid_at) ASC')
             ->get()
             ->map(fn ($row) => [
                 'month' => $row->month,
@@ -54,8 +64,8 @@ class GetRevenueReportAction
             ->get()
             ->map(fn ($row) => [
                 'method' => $row->method,
-                'total'  => (float) $row->total,
-                'count'  => (int) $row->count,
+                'total' => (float) $row->total,
+                'count' => (int) $row->count,
             ])
             ->values()
             ->toArray();
@@ -76,22 +86,22 @@ class GetRevenueReportAction
             ->limit(10)
             ->get()
             ->map(fn (Payment $payment) => [
-                'id'           => $payment->id,
+                'id' => $payment->id,
                 'student_name' => $payment->student?->name ?? 'N/A',
-                'amount'       => (float) $payment->amount,
-                'method'       => $payment->method,
-                'paid_at'      => $payment->paid_at?->format('Y-m-d'),
+                'amount' => (float) $payment->amount,
+                'method' => $payment->method,
+                'paid_at' => $payment->paid_at?->format('Y-m-d'),
             ])
             ->toArray();
 
         return [
-            'total_revenue'       => (float) $totalRevenue,
-            'revenue_by_month'    => $revenueByMonth,
-            'by_method'           => $byMethod,
+            'total_revenue' => (float) $totalRevenue,
+            'revenue_by_month' => $revenueByMonth,
+            'by_method' => $byMethod,
             'paid_packages_count' => $paidPackagesCount,
             'unpaid_packages_count' => $unpaidPackagesCount,
-            'total_students'      => $totalStudents,
-            'recent_payments'     => $recentPayments,
+            'total_students' => $totalStudents,
+            'recent_payments' => $recentPayments,
         ];
     }
 }

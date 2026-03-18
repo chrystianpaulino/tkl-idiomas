@@ -20,11 +20,12 @@ class PaymentPolicy
      * Admins bypass all checks. For non-admins, return null to fall through
      * to the individual ability methods (which all return false).
      */
-    public function before(User $user, string $ability): bool|null
+    public function before(User $user, string $ability): ?bool
     {
-        if ($user->isAdmin()) {
+        if ($user->isSuperAdmin() || $user->isAdmin()) {
             return true;
         }
+
         return null;
     }
 

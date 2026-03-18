@@ -23,7 +23,29 @@ class UpdateUserRequest extends FormRequest
         return [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($this->route('user'))],
-            'role' => ['required', 'in:admin,professor,aluno'],
+            'role' => [
+                'required',
+                'string',
+                Rule::in($this->getAllowedRoles()),
+            ],
         ];
+    }
+
+    /**
+     * Returns the roles the acting user is allowed to assign.
+     *
+     * super_admin can assign any role. school_admin and legacy admin
+     * can only assign non-privileged roles (professor, aluno).
+     */
+    private function getAllowedRoles(): array
+    {
+        $actingUser = $this->user();
+
+        if ($actingUser?->isSuperAdmin()) {
+            return ['super_admin', 'school_admin', 'admin', 'professor', 'aluno'];
+        }
+
+        // school_admin and legacy admin can only assign non-privileged roles
+        return ['professor', 'aluno'];
     }
 }

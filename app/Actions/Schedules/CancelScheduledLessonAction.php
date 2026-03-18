@@ -16,9 +16,9 @@ use App\Models\ScheduledLesson;
 class CancelScheduledLessonAction
 {
     /**
-     * @param ScheduledLesson $scheduledLesson Must be in 'scheduled' status (not confirmed or already cancelled)
-     * @param string|null     $reason          Optional cancellation reason for record-keeping
-     * @return ScheduledLesson                 The refreshed record with 'cancelled' status
+     * @param  ScheduledLesson  $scheduledLesson  Must be in 'scheduled' status (not confirmed or already cancelled)
+     * @param  string|null  $reason  Optional cancellation reason for record-keeping
+     * @return ScheduledLesson The refreshed record with 'cancelled' status
      *
      * @throws \LogicException If the slot is already confirmed or already cancelled
      */
@@ -33,7 +33,7 @@ class CancelScheduledLessonAction
         }
 
         $scheduledLesson->update([
-            'status'           => 'cancelled',
+            'status' => 'cancelled',
             'cancelled_reason' => $reason,
         ]);
 

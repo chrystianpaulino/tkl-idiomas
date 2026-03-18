@@ -9,6 +9,7 @@ use Illuminate\Console\Command;
 class SendLessonReminders extends Command
 {
     protected $signature = 'notifications:send-lesson-reminders';
+
     protected $description = 'Send 24-hour reminders for tomorrow\'s scheduled lessons';
 
     public function handle(): int
@@ -29,6 +30,7 @@ class SendLessonReminders extends Command
         }
 
         $this->info("Sent {$count} lesson reminders.");
+
         return Command::SUCCESS;
     }
 }

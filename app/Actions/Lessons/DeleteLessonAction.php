@@ -28,7 +28,7 @@ class DeleteLessonAction
     /**
      * Delete the lesson and refund the credit to its package if applicable.
      *
-     * @param Lesson $lesson The lesson to delete; must have a valid package_id for credit refund
+     * @param  Lesson  $lesson  The lesson to delete; must have a valid package_id for credit refund
      */
     public function execute(Lesson $lesson): void
     {

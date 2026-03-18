@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Records a financial payment made by a student for a lesson package.
@@ -14,25 +16,24 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * be paid once). Created exclusively through RegisterPaymentAction.
  *
  * @property int $id
- * @property int $student_id                       The student who made the payment
- * @property int $lesson_package_id                The package being paid for (unique)
- * @property int $registered_by                    The admin who recorded this payment
- * @property string $amount                        Payment amount (decimal:2)
- * @property string $currency                      ISO 4217 currency code (e.g., 'BRL')
- * @property string $method                        Payment method: pix, cash, card, transfer, other
- * @property \Illuminate\Support\Carbon|null $paid_at  When the payment was actually made
+ * @property int $student_id The student who made the payment
+ * @property int $lesson_package_id The package being paid for (unique)
+ * @property int $registered_by The admin who recorded this payment
+ * @property string $amount Payment amount (decimal:2)
+ * @property string $currency ISO 4217 currency code (e.g., 'BRL')
+ * @property string $method Payment method: pix, cash, card, transfer, other
+ * @property Carbon|null $paid_at When the payment was actually made
  * @property string|null $notes
  * @property int|null $school_id
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- *
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read User $student
  * @property-read LessonPackage $lessonPackage
  * @property-read User $registeredBy
  */
 class Payment extends Model
 {
-    use HasFactory;
+    use BelongsToSchool, HasFactory;
 
     protected $fillable = [
         'student_id',
@@ -50,7 +51,7 @@ class Payment extends Model
     {
         return [
             'paid_at' => 'datetime',
-            'amount'  => 'decimal:2',
+            'amount' => 'decimal:2',
         ];
     }
 

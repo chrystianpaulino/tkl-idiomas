@@ -18,6 +18,18 @@ use App\Models\User;
 class ExerciseListPolicy
 {
     /**
+     * Super-admins bypass all policy checks for cross-school management.
+     */
+    public function before(User $user, string $ability): ?bool
+    {
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        return null;
+    }
+
+    /**
      * Admins, the class professor, and enrolled students can see exercise lists.
      */
     public function viewAny(User $user, TurmaClass $turmaClass): bool

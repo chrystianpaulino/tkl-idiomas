@@ -18,7 +18,7 @@ Route::get('/', function () {
     return redirect()->route('dashboard');
 });
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'tenant'])->group(function () {
 
     // ── Compartilhadas — todos os papéis autenticados ────────────────────────
 
@@ -32,7 +32,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // IMPORTANTE: Este grupo é registado ANTES de /classes/{class} para que
     // /classes/create não seja capturado pelo wildcard como se fosse um ID de turma.
 
-    Route::middleware('role:admin,professor')->group(function () {
+    Route::middleware('role:admin,school_admin,professor')->group(function () {
         Route::get('/classes/create', [ClassController::class, 'create'])->name('classes.create');
         Route::post('/classes', [ClassController::class, 'store'])->name('classes.store');
         Route::get('/classes/{class}/edit', [ClassController::class, 'edit'])->name('classes.edit');
@@ -75,7 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // ── Admin — gestão global da escola ─────────────────────────────────────
 
-    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware('role:admin,school_admin')->prefix('admin')->name('admin.')->group(function () {
         // Usuários
         Route::resource('users', UserController::class);
 
@@ -96,6 +96,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Escolas
         Route::resource('schools', SchoolController::class)->except(['show']);
     });
+});
+
+// ── Platform — gestão global da plataforma (super_admin only) ────────────────
+
+Route::middleware(['auth', 'verified', 'role:super_admin'])->prefix('platform')->name('platform.')->group(function () {
+    Route::resource('schools', SchoolController::class)->except(['show']);
 });
 
 require __DIR__.'/auth.php';

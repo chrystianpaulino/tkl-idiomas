@@ -6,10 +6,10 @@ use App\Models\Exercise;
 use App\Models\ExerciseAnswer;
 use App\Models\ExerciseList;
 use App\Models\ExerciseSubmission;
-use App\Models\Lesson;
 use App\Models\TurmaClass;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -218,7 +218,7 @@ class ExerciseListTest extends TestCase
             'student_id' => $student->id,
         ]);
 
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
 
         ExerciseSubmission::factory()->create([
             'exercise_list_id' => $list->id,

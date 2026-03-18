@@ -6,6 +6,9 @@ use App\Models\Lesson;
 use App\Models\LessonPackage;
 use App\Models\TurmaClass;
 use App\Models\User;
+use App\Notifications\PackageAlmostFinished;
+use App\Notifications\PackageFinished;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -29,13 +32,13 @@ class RegisterLessonAction
      * Selects the earliest-expiring active package (FIFO consumption). Re-verifies
      * the package is still active after acquiring the lock to guard against races.
      *
-     * @param TurmaClass $turmaClass The class in which the lesson is being conducted
-     * @param User $student          Must have at least one active LessonPackage
-     * @param User $professor        The professor conducting the lesson
-     * @param array $data            Validated data: title (required), notes, conducted_at
-     * @return Lesson                The persisted lesson record
+     * @param  TurmaClass  $turmaClass  The class in which the lesson is being conducted
+     * @param  User  $student  Must have at least one active LessonPackage
+     * @param  User  $professor  The professor conducting the lesson
+     * @param  array  $data  Validated data: title (required), notes, conducted_at
+     * @return Lesson The persisted lesson record
      *
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException If no active package exists
+     * @throws ModelNotFoundException If no active package exists
      * @throws \RuntimeException If the package has no remaining credits after the lock is acquired
      */
     public function execute(TurmaClass $turmaClass, User $student, User $professor, array $data): Lesson
@@ -49,7 +52,7 @@ class RegisterLessonAction
                 ->firstOrFail();
 
             // Re-verify package is still active after lock (race condition guard)
-            if (!$package->isActive()) {
+            if (! $package->isActive()) {
                 throw new \RuntimeException('No active lesson package available for this student.');
             }
 
@@ -61,9 +64,9 @@ class RegisterLessonAction
             // the student may receive a false "package exhausted" alert. Accepted trade-off;
             // revisit if notification reliability becomes a requirement.
             if ($package->isExhausted()) {
-                $student->notify(new \App\Notifications\PackageFinished($package));
+                $student->notify(new PackageFinished($package));
             } elseif ($package->remaining === 1) {
-                $student->notify(new \App\Notifications\PackageAlmostFinished($package));
+                $student->notify(new PackageAlmostFinished($package));
             }
 
             return Lesson::create([

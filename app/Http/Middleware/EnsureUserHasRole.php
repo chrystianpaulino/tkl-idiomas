@@ -21,14 +21,11 @@ use Symfony\Component\HttpFoundation\Response;
 class EnsureUserHasRole
 {
     /**
-     * @param Request  $request
-     * @param Closure  $next
-     * @param string   ...$roles Allowed role names (e.g., 'admin', 'professor', 'aluno')
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @param  string  ...$roles  Allowed role names (e.g., 'admin', 'professor', 'aluno')
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (!in_array($request->user()?->role, $roles)) {
+        if (! in_array($request->user()?->role, $roles)) {
             abort(403);
         }
 

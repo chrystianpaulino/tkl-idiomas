@@ -2,9 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToSchool;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * An individual lesson record -- the audit trail of a credit being consumed.
@@ -20,27 +23,26 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $class_id
  * @property int $student_id
  * @property int $professor_id
- * @property int $package_id              The LessonPackage that funded this lesson
+ * @property int $package_id The LessonPackage that funded this lesson
  * @property string $title
  * @property string|null $notes
- * @property \Illuminate\Support\Carbon|null $conducted_at   When the lesson actually took place
- * @property string $status                One of: completed, scheduled, cancelled, absent_excused, absent_unexcused
- * @property \Illuminate\Support\Carbon|null $scheduled_at   Planned date/time (for future lessons)
+ * @property Carbon|null $conducted_at When the lesson actually took place
+ * @property string $status One of: completed, scheduled, cancelled, absent_excused, absent_unexcused
+ * @property Carbon|null $scheduled_at Planned date/time (for future lessons)
  * @property int|null $school_id
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- *
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read TurmaClass $turmaClass
  * @property-read User $student
  * @property-read User $professor
  * @property-read LessonPackage $package
  *
- * @method static \Illuminate\Database\Eloquent\Builder upcoming()   Future lessons with 'scheduled' status
- * @method static \Illuminate\Database\Eloquent\Builder completed()  Lessons with 'completed' status
+ * @method static \Illuminate\Database\Eloquent\Builder upcoming() Future lessons with 'scheduled' status
+ * @method static \Illuminate\Database\Eloquent\Builder completed() Lessons with 'completed' status
  */
 class Lesson extends Model
 {
-    use HasFactory;
+    use BelongsToSchool, HasFactory;
 
     protected $fillable = [
         'class_id',
@@ -126,16 +128,16 @@ class Lesson extends Model
     /**
      * Lessons scheduled in the future that have not yet been conducted or cancelled.
      */
-    public function scopeUpcoming(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    public function scopeUpcoming(Builder $query): Builder
     {
         return $query->where('scheduled_at', '>', now())
-                     ->where('status', 'scheduled');
+            ->where('status', 'scheduled');
     }
 
     /**
      * Lessons that have been successfully conducted.
      */
-    public function scopeCompleted(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    public function scopeCompleted(Builder $query): Builder
     {
         return $query->where('status', 'completed');
     }

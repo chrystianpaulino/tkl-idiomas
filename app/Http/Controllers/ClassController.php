@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\Classes\CreateClassAction;
 use App\Http\Requests\StoreClassRequest;
 use App\Http\Requests\UpdateClassRequest;
+use App\Models\ExerciseList;
 use App\Models\Lesson;
 use App\Models\Material;
 use App\Models\TurmaClass;
@@ -47,7 +48,9 @@ class ClassController extends Controller
         $this->authorize('create', TurmaClass::class);
 
         return Inertia::render('Classes/Create', [
-            'professors' => User::where('role', 'professor')->get(['id', 'name']),
+            'professors' => User::where('role', 'professor')
+                ->when(! auth()->user()->isSuperAdmin(), fn ($q) => $q->where('school_id', auth()->user()->school_id))
+                ->get(['id', 'name']),
         ]);
     }
 
@@ -79,7 +82,10 @@ class ClassController extends Controller
         $exerciseListsCount = $class->exerciseLists()->count();
 
         $availableStudents = $request->user()->isAdmin()
-            ? User::where('role', 'aluno')->whereNotIn('id', $class->students->pluck('id'))->get(['id', 'name'])
+            ? User::where('role', 'aluno')
+                ->when(! auth()->user()->isSuperAdmin(), fn ($q) => $q->where('school_id', auth()->user()->school_id))
+                ->whereNotIn('id', $class->students->pluck('id'))
+                ->get(['id', 'name'])
             : collect();
 
         return Inertia::render('Classes/Show', [
@@ -96,7 +102,7 @@ class ClassController extends Controller
                 'registerLesson' => $request->user()->can('create', [Lesson::class, $class]),
                 'uploadMaterial' => $request->user()->can('create', [Material::class, $class]),
                 'edit' => $request->user()->can('update', $class),
-                'createExerciseList' => $request->user()->can('create', [\App\Models\ExerciseList::class, $class]),
+                'createExerciseList' => $request->user()->can('create', [ExerciseList::class, $class]),
             ],
             'availableStudents' => $availableStudents,
         ]);
@@ -108,7 +114,9 @@ class ClassController extends Controller
 
         return Inertia::render('Classes/Edit', [
             'turmaClass' => $class,
-            'professors' => User::where('role', 'professor')->get(['id', 'name']),
+            'professors' => User::where('role', 'professor')
+                ->when(! auth()->user()->isSuperAdmin(), fn ($q) => $q->where('school_id', auth()->user()->school_id))
+                ->get(['id', 'name']),
         ]);
     }
 

@@ -25,8 +25,8 @@ class GenerateScheduledLessonsAction
      * Skips inactive schedules. Uses firstOrCreate keyed on (schedule_id, class_id,
      * scheduled_at) to ensure idempotency across repeated runs.
      *
-     * @param Schedule $schedule   The recurring schedule rule to generate slots for
-     * @param int      $weeksAhead How many weeks into the future to generate (default: 4)
+     * @param  Schedule  $schedule  The recurring schedule rule to generate slots for
+     * @param  int  $weeksAhead  How many weeks into the future to generate (default: 4)
      * @return Collection<int, ScheduledLesson> Only the newly created slots (not pre-existing ones)
      */
     public function execute(Schedule $schedule, int $weeksAhead = 4): Collection
@@ -52,8 +52,8 @@ class GenerateScheduledLessonsAction
             if ($scheduledAt->gt($now)) {
                 [$scheduledLesson, $wasCreated] = ScheduledLesson::firstOrCreate(
                     [
-                        'schedule_id'  => $schedule->id,
-                        'class_id'     => $schedule->class_id,
+                        'schedule_id' => $schedule->id,
+                        'class_id' => $schedule->class_id,
                         'scheduled_at' => $scheduledAt->toDateTimeString(),
                     ],
                     [
@@ -76,8 +76,8 @@ class GenerateScheduledLessonsAction
      * Generate slots for ALL active schedules across the platform.
      * Intended to be called by a scheduled artisan command (e.g., daily cron).
      *
-     * @param int $weeksAhead How many weeks into the future to generate
-     * @return int            Total number of newly created slots across all schedules
+     * @param  int  $weeksAhead  How many weeks into the future to generate
+     * @return int Total number of newly created slots across all schedules
      */
     public function executeForAll(int $weeksAhead = 4): int
     {
@@ -85,6 +85,7 @@ class GenerateScheduledLessonsAction
         Schedule::where('active', true)->with('turmaClass')->each(function (Schedule $schedule) use ($weeksAhead, &$total) {
             $total += $this->execute($schedule, $weeksAhead)->count();
         });
+
         return $total;
     }
 }

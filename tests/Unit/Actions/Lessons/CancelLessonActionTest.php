@@ -19,7 +19,7 @@ class CancelLessonActionTest extends TestCase
         $professor = User::factory()->professor()->create();
         $student = User::factory()->create();
         $package = LessonPackage::factory()->create([
-            'student_id'    => $student->id,
+            'student_id' => $student->id,
             'total_lessons' => 10,
         ]);
         // Set used_lessons directly (not in fillable)
@@ -29,11 +29,11 @@ class CancelLessonActionTest extends TestCase
         $turmaClass = TurmaClass::factory()->create(['professor_id' => $professor->id]);
 
         $lesson = Lesson::factory()->create([
-            'student_id'   => $student->id,
+            'student_id' => $student->id,
             'professor_id' => $professor->id,
-            'class_id'     => $turmaClass->id,
-            'package_id'   => $package->id,
-            'status'       => $status,
+            'class_id' => $turmaClass->id,
+            'package_id' => $package->id,
+            'status' => $status,
         ]);
 
         return compact('lesson', 'package', 'student');

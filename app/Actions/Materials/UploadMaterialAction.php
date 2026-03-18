@@ -5,6 +5,7 @@ namespace App\Actions\Materials;
 use App\Models\Material;
 use App\Models\TurmaClass;
 use App\Models\User;
+use App\Notifications\NewMaterialUploaded;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -19,11 +20,11 @@ use Illuminate\Support\Facades\Storage;
 class UploadMaterialAction
 {
     /**
-     * @param TurmaClass   $turmaClass The class this material is for
-     * @param User         $uploader   The admin or professor uploading the file
-     * @param UploadedFile $file       The uploaded file (validated by StoreMaterialRequest)
-     * @param array        $data       Validated data: title (required), description (optional)
-     * @return Material                The persisted material with file_path set
+     * @param  TurmaClass  $turmaClass  The class this material is for
+     * @param  User  $uploader  The admin or professor uploading the file
+     * @param  UploadedFile  $file  The uploaded file (validated by StoreMaterialRequest)
+     * @param  array  $data  Validated data: title (required), description (optional)
+     * @return Material The persisted material with file_path set
      */
     public function execute(TurmaClass $turmaClass, User $uploader, UploadedFile $file, array $data): Material
     {
@@ -39,7 +40,7 @@ class UploadMaterialAction
 
         $material->load('turmaClass.students');
         foreach ($material->turmaClass->students as $student) {
-            $student->notify(new \App\Notifications\NewMaterialUploaded($material));
+            $student->notify(new NewMaterialUploaded($material));
         }
 
         return $material;

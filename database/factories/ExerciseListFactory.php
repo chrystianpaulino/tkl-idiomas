@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\School;
 use App\Models\TurmaClass;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -17,6 +18,7 @@ class ExerciseListFactory extends Factory
             'title' => $this->faker->sentence(4),
             'description' => $this->faker->optional()->paragraph(),
             'due_date' => $this->faker->optional()->dateTimeBetween('+1 day', '+30 days')?->format('Y-m-d'),
+            'school_id' => School::factory(),
         ];
     }
 

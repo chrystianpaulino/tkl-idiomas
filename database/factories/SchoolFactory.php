@@ -12,9 +12,9 @@ class SchoolFactory extends Factory
     public function definition(): array
     {
         return [
-            'name'   => fake()->company(),
-            'slug'   => fake()->unique()->lexify('school-????'),
-            'email'  => fake()->optional()->companyEmail(),
+            'name' => fake()->company(),
+            'slug' => fake()->unique()->lexify('school-????'),
+            'email' => fake()->optional()->companyEmail(),
             'active' => true,
         ];
     }

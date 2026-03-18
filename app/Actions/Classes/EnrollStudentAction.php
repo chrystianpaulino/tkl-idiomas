@@ -14,8 +14,8 @@ use App\Models\User;
 class EnrollStudentAction
 {
     /**
-     * @param TurmaClass $turmaClass The class to enroll the student into
-     * @param User       $student    The student to enroll (must have role 'aluno')
+     * @param  TurmaClass  $turmaClass  The class to enroll the student into
+     * @param  User  $student  The student to enroll (must have role 'aluno')
      */
     public function execute(TurmaClass $turmaClass, User $student): void
     {

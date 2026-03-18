@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\LessonPackage;
+use App\Models\School;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -17,7 +18,7 @@ class LessonPackageFactory extends Factory
             'total_lessons' => $this->faker->numberBetween(5, 40),
             'purchased_at' => now(),
             'expires_at' => $this->faker->optional()->dateTimeBetween('+1 month', '+1 year'),
-            'school_id' => \App\Models\School::factory(),
+            'school_id' => School::factory(),
         ];
     }
 

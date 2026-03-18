@@ -17,18 +17,18 @@ use App\Models\TurmaClass;
 class CreateScheduleAction
 {
     /**
-     * @param TurmaClass $turmaClass The class to create a schedule for
-     * @param array      $data       Validated data: weekday (0-6), start_time (HH:MM), duration_minutes (optional, default 60)
-     * @return Schedule              The newly created active schedule
+     * @param  TurmaClass  $turmaClass  The class to create a schedule for
+     * @param  array  $data  Validated data: weekday (0-6), start_time (HH:MM), duration_minutes (optional, default 60)
+     * @return Schedule The newly created active schedule
      */
     public function execute(TurmaClass $turmaClass, array $data): Schedule
     {
         return Schedule::create([
-            'class_id'         => $turmaClass->id,
-            'weekday'          => $data['weekday'],
-            'start_time'       => $data['start_time'],
+            'class_id' => $turmaClass->id,
+            'weekday' => $data['weekday'],
+            'start_time' => $data['start_time'],
             'duration_minutes' => $data['duration_minutes'] ?? 60,
-            'active'           => true,
+            'active' => true,
         ]);
     }
 }

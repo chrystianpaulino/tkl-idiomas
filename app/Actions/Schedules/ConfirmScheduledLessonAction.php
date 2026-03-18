@@ -3,8 +3,10 @@
 namespace App\Actions\Schedules;
 
 use App\Actions\Lessons\RegisterLessonAction;
+use App\Models\Lesson;
 use App\Models\ScheduledLesson;
 use App\Models\User;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -31,14 +33,14 @@ class ConfirmScheduledLessonAction
     /**
      * Confirm a scheduled lesson for all enrolled students in the class.
      *
-     * @param ScheduledLesson $scheduledLesson Must be in 'scheduled' status
-     * @param User            $professor       The professor confirming/conducting the lesson
-     * @param array           $data            Optional: title, notes, conducted_at
-     * @return Collection<int, \App\Models\Lesson> One Lesson per enrolled student
+     * @param  ScheduledLesson  $scheduledLesson  Must be in 'scheduled' status
+     * @param  User  $professor  The professor confirming/conducting the lesson
+     * @param  array  $data  Optional: title, notes, conducted_at
+     * @return Collection<int, Lesson> One Lesson per enrolled student
      *
-     * @throws \LogicException    If the scheduled lesson is not in 'scheduled' status
-     * @throws \RuntimeException  If no students are enrolled in the class
-     * @throws \Illuminate\Database\Eloquent\ModelNotFoundException  Propagated from RegisterLessonAction when an enrolled student has no active lesson package at confirmation time
+     * @throws \LogicException If the scheduled lesson is not in 'scheduled' status
+     * @throws \RuntimeException If no students are enrolled in the class
+     * @throws ModelNotFoundException Propagated from RegisterLessonAction when an enrolled student has no active lesson package at confirmation time
      */
     public function execute(ScheduledLesson $scheduledLesson, User $professor, array $data = []): Collection
     {
@@ -64,8 +66,8 @@ class ConfirmScheduledLessonAction
                     $student,
                     $professor,
                     array_merge([
-                        'title'        => $data['title'] ?? 'Aula confirmada',
-                        'notes'        => $data['notes'] ?? null,
+                        'title' => $data['title'] ?? 'Aula confirmada',
+                        'notes' => $data['notes'] ?? null,
                         'conducted_at' => $data['conducted_at'] ?? $scheduledLesson->scheduled_at->toDateTimeString(),
                     ], [])
                 );
@@ -76,7 +78,7 @@ class ConfirmScheduledLessonAction
             // Update the scheduled_lesson status and link to the first lesson created
             // (for group classes, link to first lesson as the representative record)
             $scheduledLesson->update([
-                'status'    => 'confirmed',
+                'status' => 'confirmed',
                 'lesson_id' => $lessons->first()?->id,
             ]);
 

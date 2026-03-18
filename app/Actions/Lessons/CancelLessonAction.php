@@ -26,9 +26,9 @@ class CancelLessonAction
     /**
      * Cancel a lesson, optionally refunding the credit to the student's package.
      *
-     * @param Lesson $lesson       The lesson to cancel (must be in a valid source status)
-     * @param bool   $refundLesson True = credit returned to package; False = marked as unexcused absence
-     * @return Lesson              The refreshed lesson after status change
+     * @param  Lesson  $lesson  The lesson to cancel (must be in a valid source status)
+     * @param  bool  $refundLesson  True = credit returned to package; False = marked as unexcused absence
+     * @return Lesson The refreshed lesson after status change
      *
      * @throws \LogicException If the lesson is in a status that cannot be cancelled
      */

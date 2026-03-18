@@ -21,11 +21,11 @@ class GetProgressStatsActionTest extends TestCase
         $turmaClass = TurmaClass::factory()->create(['professor_id' => $professor->id]);
 
         return Lesson::factory()->create(array_merge([
-            'student_id'   => $student->id,
+            'student_id' => $student->id,
             'professor_id' => $professor->id,
-            'class_id'     => $turmaClass->id,
-            'package_id'   => $package->id,
-            'status'       => 'completed',
+            'class_id' => $turmaClass->id,
+            'package_id' => $package->id,
+            'status' => 'completed',
             'conducted_at' => now(),
         ], $attributes));
     }
@@ -75,7 +75,7 @@ class GetProgressStatsActionTest extends TestCase
         $student = User::factory()->create();
 
         $this->createLessonForStudent($student, [
-            'status'       => 'completed',
+            'status' => 'completed',
             'conducted_at' => now(),
         ]);
 
@@ -89,7 +89,7 @@ class GetProgressStatsActionTest extends TestCase
         $student = User::factory()->create();
 
         $this->createLessonForStudent($student, [
-            'status'       => 'completed',
+            'status' => 'completed',
             'conducted_at' => now()->subWeeks(3),
         ]);
 

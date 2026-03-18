@@ -2,12 +2,14 @@
 
 namespace Database\Factories;
 
+use App\Models\School;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
+ * @extends Factory<User>
  */
 class UserFactory extends Factory
 {
@@ -30,7 +32,7 @@ class UserFactory extends Factory
             'password' => static::$password ??= Hash::make('password'),
             'role' => 'aluno',
             'remember_token' => Str::random(10),
-            'school_id' => \App\Models\School::factory(),
+            'school_id' => School::factory(),
         ];
     }
 

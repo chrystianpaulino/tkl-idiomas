@@ -14,8 +14,8 @@ use App\Models\User;
 class UnenrollStudentAction
 {
     /**
-     * @param TurmaClass $turmaClass The class to unenroll the student from
-     * @param User       $student    The student to remove
+     * @param  TurmaClass  $turmaClass  The class to unenroll the student from
+     * @param  User  $student  The student to remove
      */
     public function execute(TurmaClass $turmaClass, User $student): void
     {

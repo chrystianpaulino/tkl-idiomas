@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToSchool;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * A concrete lesson slot generated from a recurring Schedule rule.
@@ -18,24 +20,23 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $schedule_id
  * @property int $class_id
- * @property \Illuminate\Support\Carbon $scheduled_at     Date and time for this slot
- * @property string $status                               One of: scheduled, confirmed, cancelled
- * @property string|null $cancelled_reason                 Free-text reason when cancelled
- * @property int|null $lesson_id                           Set when confirmed; links to the representative Lesson
- * @property \Illuminate\Support\Carbon $created_at
- * @property \Illuminate\Support\Carbon $updated_at
- *
+ * @property Carbon $scheduled_at Date and time for this slot
+ * @property string $status One of: scheduled, confirmed, cancelled
+ * @property string|null $cancelled_reason Free-text reason when cancelled
+ * @property int|null $lesson_id Set when confirmed; links to the representative Lesson
+ * @property Carbon $created_at
+ * @property Carbon $updated_at
  * @property-read Schedule $schedule
  * @property-read TurmaClass $turmaClass
  * @property-read Lesson|null $lesson
  *
- * @method static Builder upcoming()                     Future slots still in 'scheduled' status
- * @method static Builder forClass(int $classId)         Filter by class
+ * @method static Builder upcoming() Future slots still in 'scheduled' status
+ * @method static Builder forClass(int $classId) Filter by class
  * @method static Builder forStudent(int $studentId)     Filter by enrolled student (via class pivot)
  */
 class ScheduledLesson extends Model
 {
-    use HasFactory;
+    use BelongsToSchool, HasFactory;
 
     protected $fillable = [
         'schedule_id',
@@ -44,6 +45,7 @@ class ScheduledLesson extends Model
         'status',
         'cancelled_reason',
         'lesson_id',
+        'school_id',
     ];
 
     protected function casts(): array
@@ -106,7 +108,7 @@ class ScheduledLesson extends Model
     public function scopeUpcoming(Builder $query): Builder
     {
         return $query->where('scheduled_at', '>', now())
-                     ->where('status', 'scheduled');
+            ->where('status', 'scheduled');
     }
 
     /**
