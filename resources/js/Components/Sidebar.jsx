@@ -1,32 +1,35 @@
 import { Link, usePage } from '@inertiajs/react';
 
-const navConfig = {
-    super_admin: [
-        { label: 'Dashboard', href: '/platform/dashboard', icon: '◈' },
-        { label: 'Escolas', href: '/platform/schools', icon: '⊟' },
-    ],
-    school_admin: [
-        { label: 'Dashboard', href: '/dashboard', icon: '◈' },
-        { label: 'Usuários', href: '/admin/users', icon: '◎' },
-        { label: 'Turmas', href: '/classes', icon: '⊞' },
-        { label: 'Relatório Financeiro', href: '/admin/payments/report', icon: '◇' },
-    ],
-    // legacy role — identical permissions to school_admin
-    admin: [
-        { label: 'Dashboard', href: '/dashboard', icon: '◈' },
-        { label: 'Usuários', href: '/admin/users', icon: '◎' },
-        { label: 'Turmas', href: '/classes', icon: '⊞' },
-        { label: 'Relatório Financeiro', href: '/admin/payments/report', icon: '◇' },
-    ],
-    professor: [
-        { label: 'Dashboard', href: '/dashboard', icon: '◈' },
-        { label: 'Minhas Turmas', href: '/classes', icon: '⊞' },
-    ],
-    aluno: [
-        { label: 'Dashboard', href: '/dashboard', icon: '◈' },
-        { label: 'Minhas Turmas', href: '/classes', icon: '⊞' },
-    ],
-};
+function buildNavItems(role, school) {
+    switch (role) {
+        case 'super_admin':
+            return [
+                { label: 'Dashboard', href: '/platform/dashboard', icon: '◈' },
+                { label: 'Escolas', href: '/platform/schools', icon: '⊟' },
+            ];
+        case 'school_admin':
+        case 'admin':
+            return [
+                { label: 'Dashboard', href: '/dashboard', icon: '◈' },
+                ...(school ? [{ label: 'Minha Escola', href: `/admin/schools/${school.id}/edit`, icon: '⊟' }] : []),
+                { label: 'Professores', href: '/admin/users?role=professor', icon: '◎' },
+                { label: 'Alunos', href: '/admin/users?role=aluno', icon: '◎' },
+                { label: 'Turmas', href: '/classes', icon: '⊞' },
+                { label: 'Relatório Financeiro', href: '/admin/payments/report', icon: '◇' },
+            ];
+        case 'professor':
+            return [
+                { label: 'Dashboard', href: '/dashboard', icon: '◈' },
+                { label: 'Minhas Turmas', href: '/classes', icon: '⊞' },
+            ];
+        case 'aluno':
+        default:
+            return [
+                { label: 'Dashboard', href: '/dashboard', icon: '◈' },
+                { label: 'Minhas Turmas', href: '/classes', icon: '⊞' },
+            ];
+    }
+}
 
 const roleLabels = {
     super_admin: 'Dono da Plataforma',
@@ -47,8 +50,8 @@ export default function Sidebar() {
     const { auth, app_name: appName } = usePage().props;
     const school = auth?.school;
     const role = auth?.user?.role ?? 'aluno';
-    const items = navConfig[role] ?? navConfig.aluno;
-    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
+    const items = buildNavItems(role, school);
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
 
     return (
         <aside className="w-64 bg-slate-900 flex flex-col flex-shrink-0 border-r border-slate-800">
@@ -72,7 +75,10 @@ export default function Sidebar() {
             {/* Nav */}
             <nav className="flex-1 px-3 py-4 space-y-0.5">
                 {items.map((item) => {
-                    const isActive = currentPath === item.href || (item.href !== '/dashboard' && currentPath.startsWith(item.href));
+                    const isActive = currentPath === item.href ||
+                        (item.href !== '/dashboard' &&
+                         !item.href.includes('?') &&
+                         currentPath.startsWith(item.href));
                     return (
                         <Link
                             key={item.href}
