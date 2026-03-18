@@ -48,8 +48,18 @@ class UserController extends Controller
         return redirect()->route('admin.users.show', $user)->with('success', 'Usuário criado com sucesso.');
     }
 
+    private function authorizeSchoolAccess(User $user): void
+    {
+        $actor = request()->user();
+        if (! $actor->isSuperAdmin() && $user->school_id !== $actor->school_id) {
+            abort(403);
+        }
+    }
+
     public function show(User $user): Response
     {
+        $this->authorizeSchoolAccess($user);
+
         $packages = $user->lessonPackages()
             ->latest()
             ->get()
@@ -74,6 +84,8 @@ class UserController extends Controller
 
     public function edit(User $user): Response
     {
+        $this->authorizeSchoolAccess($user);
+
         return Inertia::render('Users/Edit', [
             'user' => $user->only('id', 'name', 'email', 'role'),
         ]);
@@ -81,6 +93,8 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user): RedirectResponse
     {
+        $this->authorizeSchoolAccess($user);
+
         $user->name = $request->validated('name');
         $user->email = $request->validated('email');
         $user->role = $request->validated('role');
@@ -91,6 +105,8 @@ class UserController extends Controller
 
     public function destroy(User $user): RedirectResponse
     {
+        $this->authorizeSchoolAccess($user);
+
         $user->delete();
 
         return redirect()->route('admin.users.index')->with('success', 'Usuário removido com sucesso.');
