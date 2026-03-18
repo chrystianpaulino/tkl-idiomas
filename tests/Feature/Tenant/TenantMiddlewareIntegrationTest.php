@@ -150,8 +150,12 @@ class TenantMiddlewareIntegrationTest extends TestCase
             'school_id' => null,
         ]);
 
+        // super_admin is redirected from /dashboard to /platform/dashboard.
         $response = $this->actingAs($superAdmin)->get('/dashboard');
+        $response->assertRedirect('/platform/dashboard');
 
+        // Follow the redirect and confirm the platform dashboard loads.
+        $response = $this->actingAs($superAdmin)->get('/platform/dashboard');
         $response->assertStatus(200);
 
         // Super admin has no school_id, so no tenant context should be bound.

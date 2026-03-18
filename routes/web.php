@@ -9,6 +9,7 @@ use App\Http\Controllers\LessonController;
 use App\Http\Controllers\LessonPackageController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\PlatformDashboardController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\UserController;
