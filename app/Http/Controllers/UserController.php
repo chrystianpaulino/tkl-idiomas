@@ -24,9 +24,14 @@ class UserController extends Controller
 {
     public function index(Request $request): Response
     {
+        $actor = $request->user();
+
         $users = User::query()
+            ->when(! $actor->isSuperAdmin(), fn ($q) => $q->where('school_id', $actor->school_id))
             ->when($request->input('role'), fn ($q, $role) => $q->where('role', $role))
-            ->when($request->input('search'), fn ($q, $s) => $q->where('name', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%"))
+            ->when($request->input('search'), fn ($q, $s) => $q->where(function ($q2) use ($s) {
+                $q2->where('name', 'like', "%{$s}%")->orWhere('email', 'like', "%{$s}%");
+            }))
             ->paginate(20)
             ->withQueryString();
 
