@@ -83,7 +83,8 @@ class SchoolController extends Controller
 
     public function destroy(School $school): RedirectResponse
     {
-        if (! auth()->user()->isSuperAdmin() && auth()->user()->school_id !== $school->id) {
+        // L3: Only super_admin may delete schools
+        if (! auth()->user()->isSuperAdmin()) {
             abort(403);
         }
 

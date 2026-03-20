@@ -55,6 +55,11 @@ class LessonPackageController extends Controller
 
     public function destroy(User $student, LessonPackage $package): RedirectResponse
     {
+        // H2: Guard against cross-tenant package deletion
+        if (! auth()->user()->isSuperAdmin() && $package->school_id !== auth()->user()->school_id) {
+            abort(403);
+        }
+
         // Cannot delete a package that has lessons recorded against it
         if ($package->lessons()->exists()) {
             return back()->withErrors(['package' => 'Não é possível excluir um pacote com aulas registradas.']);

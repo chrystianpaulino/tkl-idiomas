@@ -22,14 +22,14 @@ return new class extends Migration
     {
         // ── 1. Resolve (or create) the default school ─────────────────────────
 
-        $existing = DB::table('schools')->where('slug', 'tkl')->first();
+        $existing = DB::table('schools')->where('slug', 'tkl-idiomas')->first();
 
         if ($existing) {
             $schoolId = $existing->id;
         } else {
             $schoolId = DB::table('schools')->insertGetId([
                 'name' => 'TKL Idiomas',
-                'slug' => 'tkl',
+                'slug' => 'tkl-idiomas',
                 'email' => null,
                 'active' => true,
                 'created_at' => now(),

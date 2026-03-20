@@ -41,7 +41,7 @@ class GetRevenueReportAction
             $studentQuery->where('school_id', $schoolId);
         }
 
-        $totalRevenue = (clone $paymentQuery)->sum('amount');
+        $totalRevenue = number_format((float) (clone $paymentQuery)->sum('amount'), 2, '.', '');
 
         // SQLite-compatible date formatting with strftime
         $revenueByMonth = (clone $paymentQuery)
@@ -52,7 +52,7 @@ class GetRevenueReportAction
             ->get()
             ->map(fn ($row) => [
                 'month' => $row->month,
-                'total' => (float) $row->total,
+                'total' => number_format((float) $row->total, 2, '.', ''),
             ])
             ->values()
             ->toArray();
@@ -64,7 +64,7 @@ class GetRevenueReportAction
             ->get()
             ->map(fn ($row) => [
                 'method' => $row->method,
-                'total' => (float) $row->total,
+                'total' => number_format((float) $row->total, 2, '.', ''),
                 'count' => (int) $row->count,
             ])
             ->values()
@@ -88,14 +88,14 @@ class GetRevenueReportAction
             ->map(fn (Payment $payment) => [
                 'id' => $payment->id,
                 'student_name' => $payment->student?->name ?? 'N/A',
-                'amount' => (float) $payment->amount,
+                'amount' => number_format((float) $payment->amount, 2, '.', ''),
                 'method' => $payment->method,
                 'paid_at' => $payment->paid_at?->format('Y-m-d'),
             ])
             ->toArray();
 
         return [
-            'total_revenue' => (float) $totalRevenue,
+            'total_revenue' => $totalRevenue,
             'revenue_by_month' => $revenueByMonth,
             'by_method' => $byMethod,
             'paid_packages_count' => $paidPackagesCount,

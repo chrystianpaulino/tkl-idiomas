@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Multi-tenancy root entity representing a language school on the platform.
@@ -71,13 +72,26 @@ class School extends Model
 
             DB::transaction(function () use ($id): void {
                 DB::table('scheduled_lessons')->where('school_id', $id)->delete();
-                // exercise_submissions cascade when their exercise_list or student is deleted
+
+                // H6: Delete exercise_submissions before exercise_lists to avoid FK constraint violations
+                $exerciseListIds = DB::table('exercise_lists')->where('school_id', $id)->pluck('id');
+                if ($exerciseListIds->isNotEmpty()) {
+                    DB::table('exercise_submissions')->whereIn('exercise_list_id', $exerciseListIds)->delete();
+                }
                 DB::table('exercise_lists')->where('school_id', $id)->delete();
+
                 DB::table('schedules')->where('school_id', $id)->delete();
                 DB::table('payments')->where('school_id', $id)->delete();
                 DB::table('lessons')->where('school_id', $id)->delete();
                 DB::table('lesson_packages')->where('school_id', $id)->delete();
+
+                // H6: Clean up physical storage files before deleting material records
+                $filePaths = DB::table('materials')->where('school_id', $id)->pluck('file_path');
+                foreach ($filePaths as $filePath) {
+                    Storage::disk('public')->delete($filePath);
+                }
                 DB::table('materials')->where('school_id', $id)->delete();
+
                 DB::table('classes')->where('school_id', $id)->delete();
                 // Users have nullable school_id; cascade via student_id is already handled above.
                 DB::table('users')->where('school_id', $id)->delete();

@@ -197,7 +197,7 @@ function AdminDashboard({ stats }) {
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm font-medium text-gray-900 truncate">{lesson.title}</p>
                                     <p className="text-xs text-gray-500 mt-0.5">
-                                        {lesson.student?.name} &middot; {lesson.turma_class?.name}
+                                        {lesson.student?.name} &middot; {lesson.class_name}
                                     </p>
                                 </div>
                                 <span className="text-xs text-gray-400 flex-shrink-0">
@@ -294,7 +294,7 @@ function ProfessorDashboard({ stats }) {
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm font-medium text-gray-900 truncate">{lesson.title}</p>
                                         <p className="text-xs text-gray-500 mt-0.5">
-                                            {lesson.student?.name} &middot; {lesson.turma_class?.name}
+                                            {lesson.student?.name} &middot; {lesson.class_name}
                                         </p>
                                     </div>
                                     <span className="text-xs text-gray-400 flex-shrink-0">
@@ -523,7 +523,7 @@ function AlunoDashboard({ stats }) {
                                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(payment.amount)}
                                         </p>
                                         <p className="text-xs text-gray-500">
-                                            {payment.total_lessons} aulas &middot; {payment.paid_at}
+                                            {payment.total_lessons != null ? `${payment.total_lessons} aulas` : '—'} &middot; {payment.paid_at}
                                         </p>
                                     </div>
                                 </div>

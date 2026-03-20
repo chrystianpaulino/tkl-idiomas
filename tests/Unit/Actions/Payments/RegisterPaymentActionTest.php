@@ -6,6 +6,7 @@ use App\Actions\Payments\RegisterPaymentAction;
 use App\Models\LessonPackage;
 use App\Models\Payment;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
@@ -126,5 +127,25 @@ class RegisterPaymentActionTest extends TestCase
             'method' => 'pix',
             'paid_at' => now()->toDateTimeString(),
         ], $this->admin->id);
+    }
+
+    public function test_throws_unique_constraint_when_paying_same_package_twice(): void
+    {
+        $student = User::factory()->create();
+        $package = LessonPackage::factory()->create(['student_id' => $student->id]);
+
+        $paymentData = [
+            'amount' => '220.00',
+            'method' => 'pix',
+            'paid_at' => now()->toDateTimeString(),
+        ];
+
+        // First payment succeeds
+        $this->action->execute($student, $package, $paymentData, $this->admin->id);
+
+        // Second payment for the same package triggers unique constraint violation
+        $this->expectException(UniqueConstraintViolationException::class);
+
+        $this->action->execute($student, $package, $paymentData, $this->admin->id);
     }
 }

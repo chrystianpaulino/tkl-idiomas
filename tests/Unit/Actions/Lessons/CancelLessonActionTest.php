@@ -101,4 +101,54 @@ class CancelLessonActionTest extends TestCase
     // exists for future schema evolution when scheduled lessons may be created without a
     // pre-assigned package. It cannot be tested now because lessons.package_id is NOT NULL
     // in the current schema. Add a test here when package_id is made nullable.
+
+    // ── Status transition tests (L7) ──────────────────────────────
+
+    public function test_absent_excused_to_absent_unexcused_no_refund_keeps_used_lessons(): void
+    {
+        // absent_excused is credit-consuming. Cancelling with refundLesson=false
+        // transitions to absent_unexcused (also credit-consuming) -- no decrement.
+        ['lesson' => $lesson, 'package' => $package] = $this->makeLesson('absent_excused', 4);
+
+        $result = (new CancelLessonAction)->execute($lesson, refundLesson: false);
+
+        $this->assertEquals('absent_unexcused', $result->status);
+        $this->assertEquals(4, $package->fresh()->used_lessons);
+    }
+
+    public function test_absent_unexcused_to_cancelled_with_refund_decrements_used_lessons(): void
+    {
+        // absent_unexcused is credit-consuming. Cancelling with refundLesson=true
+        // transitions to cancelled and refunds the credit (decrement).
+        ['lesson' => $lesson, 'package' => $package] = $this->makeLesson('absent_unexcused', 4);
+
+        $result = (new CancelLessonAction)->execute($lesson, refundLesson: true);
+
+        $this->assertEquals('cancelled', $result->status);
+        $this->assertEquals(3, $package->fresh()->used_lessons);
+    }
+
+    public function test_absent_excused_to_cancelled_with_refund_decrements_used_lessons(): void
+    {
+        // absent_excused is credit-consuming. Cancelling with refundLesson=true
+        // refunds the credit.
+        ['lesson' => $lesson, 'package' => $package] = $this->makeLesson('absent_excused', 4);
+
+        $result = (new CancelLessonAction)->execute($lesson, refundLesson: true);
+
+        $this->assertEquals('cancelled', $result->status);
+        $this->assertEquals(3, $package->fresh()->used_lessons);
+    }
+
+    public function test_completed_to_absent_unexcused_no_refund_keeps_used_lessons(): void
+    {
+        // completed is credit-consuming. Cancelling with refundLesson=false
+        // transitions to absent_unexcused -- credit stays consumed.
+        ['lesson' => $lesson, 'package' => $package] = $this->makeLesson('completed', 6);
+
+        $result = (new CancelLessonAction)->execute($lesson, refundLesson: false);
+
+        $this->assertEquals('absent_unexcused', $result->status);
+        $this->assertEquals(6, $package->fresh()->used_lessons);
+    }
 }

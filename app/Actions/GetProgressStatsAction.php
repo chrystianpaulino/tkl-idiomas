@@ -78,31 +78,36 @@ class GetProgressStatsAction
      */
     private function calculateStreak(int $studentId): int
     {
-        $weeks = Lesson::where('student_id', $studentId)
+        // M3: Use Carbon for all week calculations to avoid SQLite strftime vs ISO-8601 divergence
+        $lessonDates = Lesson::where('student_id', $studentId)
             ->where('status', 'completed')
-            ->selectRaw("strftime('%Y-%W', conducted_at) as week")
-            ->distinct()
-            ->orderByRaw('week DESC')
-            ->pluck('week')
-            ->toArray();
+            ->orderByRaw('conducted_at DESC')
+            ->pluck('conducted_at');
 
-        if (empty($weeks)) {
+        if ($lessonDates->isEmpty()) {
             return 0;
         }
 
+        // Collect distinct ISO week keys from lesson dates
+        $weeks = $lessonDates
+            ->map(fn ($date) => Carbon::parse($date)->startOfWeek()->format('Y-W'))
+            ->unique()
+            ->values()
+            ->toArray();
+
         $streak = 1;
         $current = Carbon::now()->startOfWeek();
-        $currentWeekKey = $current->format('Y').'-'.str_pad($current->format('W'), 2, '0', STR_PAD_LEFT);
+        $currentWeekKey = $current->format('Y-W');
+        $lastWeekKey = $current->copy()->subWeek()->format('Y-W');
 
         $mostRecent = $weeks[0];
-        $lastWeekKey = $current->copy()->subWeek()->format('Y').'-'.str_pad($current->copy()->subWeek()->format('W'), 2, '0', STR_PAD_LEFT);
 
         if ($mostRecent !== $currentWeekKey && $mostRecent !== $lastWeekKey) {
             return 0;
         }
 
         for ($i = 1; $i < count($weeks); $i++) {
-            $expected = $current->copy()->subWeeks($i)->format('Y').'-'.str_pad($current->copy()->subWeeks($i)->format('W'), 2, '0', STR_PAD_LEFT);
+            $expected = $current->copy()->subWeeks($i)->format('Y-W');
             if ($weeks[$i] === $expected) {
                 $streak++;
             } else {

@@ -137,10 +137,21 @@ class GetDashboardStatsAction
             'total_classes' => $user->taughtClasses()->count(),
             'total_lessons_taught' => Lesson::where('professor_id', $user->id)->count(),
             'recent_lessons' => Lesson::where('professor_id', $user->id)
-                ->with(['student', 'turmaClass'])
+                ->with(['student:id,name', 'turmaClass:id,name'])
                 ->latest('conducted_at')
                 ->limit(5)
-                ->get(),
+                ->get()
+                ->map(fn ($lesson) => [
+                    'id' => $lesson->id,
+                    'title' => $lesson->title,
+                    'conducted_at' => $lesson->conducted_at,
+                    'status' => $lesson->status,
+                    'class_name' => $lesson->turmaClass?->name,
+                    'student' => $lesson->student ? [
+                        'id' => $lesson->student->id,
+                        'name' => $lesson->student->name,
+                    ] : null,
+                ])->values(),
             'classes' => $user->taughtClasses()->latest()->get()->map(fn ($c) => [
                 'id' => $c->id,
                 'name' => $c->name,
@@ -219,7 +230,8 @@ class GetDashboardStatsAction
             'enrolledClasses' => $enrolledClasses,
             'stats' => [
                 'totalLessonsUsed' => $user->lessons()->completed()->count(),
-                'remaining' => $activePackage?->remaining ?? 0,
+                'remaining' => $user->remaining_lessons,
+                'low_credits' => $user->remaining_lessons <= 2,
                 'nextPaymentDue' => $warning === 'last_lesson' || $warning === 'exhausted',
             ],
             'progress' => (new GetProgressStatsAction)->execute($user),

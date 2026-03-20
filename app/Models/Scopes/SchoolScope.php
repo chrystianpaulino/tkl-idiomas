@@ -26,7 +26,7 @@ class SchoolScope implements Scope
      */
     public function apply(Builder $builder, Model $model): void
     {
-        if (app()->bound('tenant.school_id') && app('tenant.school_id') !== null) {
+        if (app()->bound('tenant.school_id') && ($schoolId = app('tenant.school_id')) !== null && $schoolId > 0) {
             $builder->where($model->getTable().'.school_id', app('tenant.school_id'));
         }
     }

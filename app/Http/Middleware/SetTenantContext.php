@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -35,9 +34,6 @@ class SetTenantContext
 
         if ($user !== null && $user->school_id !== null && $user->school_id > 0) {
             app()->instance('tenant.school_id', $user->school_id);
-            Log::debug('Tenant context bound', ['school_id' => $user->school_id, 'user_id' => $user->id]);
-        } else {
-            Log::debug('No tenant context — super-admin or unauthenticated', ['user_id' => $user?->id]);
         }
 
         return $next($request);

@@ -61,6 +61,7 @@ class SchoolControllerProvisionTest extends TestCase
             'admin_name' => 'Admin Provisioned',
             'admin_email' => 'admin@provisioned.com',
             'admin_password' => 'secret1234',
+            'admin_password_confirmation' => 'secret1234',
         ], $overrides);
     }
 

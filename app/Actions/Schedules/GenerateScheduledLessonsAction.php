@@ -58,6 +58,7 @@ class GenerateScheduledLessonsAction
                     ],
                     [
                         'status' => 'scheduled',
+                        'school_id' => $schedule->school_id,
                     ]
                 );
 

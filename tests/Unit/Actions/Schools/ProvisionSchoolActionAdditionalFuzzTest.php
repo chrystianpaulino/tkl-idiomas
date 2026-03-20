@@ -69,7 +69,11 @@ class ProvisionSchoolActionAdditionalFuzzTest extends TestCase
 
         // Verify that StoreSchoolRequest WOULD reject this via its rules.
         $rules = (new StoreSchoolRequest)->rules();
-        $this->assertContains('min:8', $rules['admin_password']);
+        $this->assertContains('confirmed', $rules['admin_password']);
+        $this->assertTrue(
+            collect($rules['admin_password'])->contains(fn ($rule) => $rule instanceof \Illuminate\Validation\Rules\Password),
+            'admin_password rules should include a Password rule instance'
+        );
     }
 
     // ── Password boundary: exactly 8 chars (at min:8) ──────────────

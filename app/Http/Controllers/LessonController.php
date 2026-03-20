@@ -72,6 +72,16 @@ class LessonController extends Controller
     {
         $student = User::findOrFail($request->validated('student_id'));
 
+        // C1: Guard against cross-tenant IDOR — professor must be in same school as student
+        if (! auth()->user()->isSuperAdmin() && $student->school_id !== auth()->user()->school_id) {
+            abort(403);
+        }
+
+        // C1: Verify the student is actually enrolled in this class
+        if (! $class->students()->where('student_id', $student->id)->exists()) {
+            abort(403, 'Student is not enrolled in this class.');
+        }
+
         try {
             $action->execute($class, $student, $request->user(), $request->validated());
         } catch (\RuntimeException $e) {

@@ -17,9 +17,11 @@ class LessonPackageTest extends TestCase
         $package = LessonPackage::factory()->create([
             'student_id' => $student->id,
             'total_lessons' => 10,
-            'used_lessons' => 3,
             'expires_at' => null,
         ]);
+        // used_lessons is not in $fillable -- set via direct assignment
+        $package->used_lessons = 3;
+        $package->save();
 
         $result = LessonPackage::active()->get();
 
@@ -30,11 +32,13 @@ class LessonPackageTest extends TestCase
     public function test_scope_active_excludes_expired_package(): void
     {
         $student = User::factory()->create(['role' => 'aluno']);
-        LessonPackage::factory()->expired()->create([
+        $package = LessonPackage::factory()->expired()->create([
             'student_id' => $student->id,
             'total_lessons' => 10,
-            'used_lessons' => 3,
         ]);
+        // used_lessons is not in $fillable -- set via direct assignment
+        $package->used_lessons = 3;
+        $package->save();
 
         $this->assertCount(0, LessonPackage::active()->get());
     }
@@ -56,9 +60,9 @@ class LessonPackageTest extends TestCase
         LessonPackage::factory()->create([
             'student_id' => $student->id,
             'total_lessons' => 10,
-            'used_lessons' => 0,
             'expires_at' => now()->addMonth(),
         ]);
+        // used_lessons defaults to 0 in the DB, which is what we want here
 
         $this->assertCount(1, LessonPackage::active()->get());
     }
@@ -116,14 +120,18 @@ class LessonPackageTest extends TestCase
         $active = LessonPackage::factory()->create([
             'student_id' => $student->id,
             'total_lessons' => 10,
-            'used_lessons' => 3,
             'expires_at' => null,
         ]);
+        // used_lessons is not in $fillable -- set via direct assignment
+        $active->used_lessons = 3;
+        $active->save();
+
         $expired = LessonPackage::factory()->expired()->create([
             'student_id' => $student->id,
             'total_lessons' => 10,
-            'used_lessons' => 3,
         ]);
+        $expired->used_lessons = 3;
+        $expired->save();
         $exhausted = LessonPackage::factory()->exhausted()->create([
             'student_id' => $student->id,
             'total_lessons' => 10,

@@ -72,7 +72,6 @@ class DatabaseSeeder extends Seeder
             $package = new LessonPackage;
             $package->student_id = $student->id;
             $package->total_lessons = 20;
-            $package->used_lessons = 0;
             $package->purchased_at = now();
             $package->expires_at = now()->addYear();
             $package->school_id = $school->id;

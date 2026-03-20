@@ -3,7 +3,9 @@
 namespace Tests\Unit\Actions;
 
 use App\Actions\GetDashboardStatsAction;
+use App\Models\LessonPackage;
 use App\Models\School;
+use App\Models\TurmaClass;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -204,5 +206,214 @@ class GetDashboardStatsActionTest extends TestCase
         $this->assertArrayHasKey('total_students', $stats);
         $this->assertArrayHasKey('total_revenue', $stats);
         $this->assertArrayHasKey('active_schools', $stats);
+    }
+
+    // ── professorStats ─────────────────────────────────────────────
+
+    public function test_professor_stats_returns_classes_array_with_correct_structure(): void
+    {
+        $school = School::factory()->create();
+
+        $professor = User::factory()->professor()->create(['school_id' => $school->id]);
+
+        $class1 = TurmaClass::factory()->create([
+            'professor_id' => $professor->id,
+            'school_id' => $school->id,
+            'name' => 'English A1',
+        ]);
+        $class2 = TurmaClass::factory()->create([
+            'professor_id' => $professor->id,
+            'school_id' => $school->id,
+            'name' => 'English B2',
+        ]);
+
+        app()->instance('tenant.school_id', $school->id);
+
+        $stats = $this->action->execute($professor);
+
+        $this->assertArrayHasKey('classes', $stats);
+        $this->assertCount(2, $stats['classes']);
+        $this->assertArrayHasKey('total_classes', $stats);
+        $this->assertSame(2, $stats['total_classes']);
+        $this->assertArrayHasKey('total_lessons_taught', $stats);
+        $this->assertArrayHasKey('recent_lessons', $stats);
+        $this->assertArrayHasKey('studentsNeedingPackage', $stats);
+        $this->assertArrayHasKey('class_payment_stats', $stats);
+
+        // Verify class structure
+        $classItem = $stats['classes']->first();
+        $this->assertArrayHasKey('id', $classItem);
+        $this->assertArrayHasKey('name', $classItem);
+    }
+
+    public function test_professor_stats_returns_empty_classes_when_no_classes_assigned(): void
+    {
+        $school = School::factory()->create();
+        $professor = User::factory()->professor()->create(['school_id' => $school->id]);
+
+        app()->instance('tenant.school_id', $school->id);
+
+        $stats = $this->action->execute($professor);
+
+        $this->assertCount(0, $stats['classes']);
+        $this->assertSame(0, $stats['total_classes']);
+    }
+
+    // ── alunoStats ─────────────────────────────────────────────────
+
+    public function test_aluno_stats_remaining_equals_sum_across_all_active_packages(): void
+    {
+        $school = School::factory()->create();
+        $student = User::factory()->create(['school_id' => $school->id]);
+
+        // Package 1: 10 total, 3 used = 7 remaining
+        $pkg1 = LessonPackage::factory()->create([
+            'student_id' => $student->id,
+            'total_lessons' => 10,
+            'school_id' => $school->id,
+            'expires_at' => null,
+        ]);
+        $pkg1->used_lessons = 3;
+        $pkg1->save();
+
+        // Package 2: 5 total, 1 used = 4 remaining
+        $pkg2 = LessonPackage::factory()->create([
+            'student_id' => $student->id,
+            'total_lessons' => 5,
+            'school_id' => $school->id,
+            'expires_at' => now()->addMonth(),
+        ]);
+        $pkg2->used_lessons = 1;
+        $pkg2->save();
+
+        app()->instance('tenant.school_id', $school->id);
+
+        $stats = $this->action->execute($student);
+
+        // 7 + 4 = 11 remaining across both active packages
+        $this->assertSame(11, $stats['stats']['remaining']);
+    }
+
+    public function test_aluno_stats_low_credits_true_when_remaining_lte_2(): void
+    {
+        $school = School::factory()->create();
+        $student = User::factory()->create(['school_id' => $school->id]);
+
+        $pkg = LessonPackage::factory()->create([
+            'student_id' => $student->id,
+            'total_lessons' => 5,
+            'school_id' => $school->id,
+            'expires_at' => null,
+        ]);
+        $pkg->used_lessons = 3;
+        $pkg->save();
+        // remaining = 2
+
+        app()->instance('tenant.school_id', $school->id);
+
+        $stats = $this->action->execute($student);
+
+        $this->assertSame(2, $stats['stats']['remaining']);
+        $this->assertTrue($stats['stats']['low_credits']);
+    }
+
+    public function test_aluno_stats_low_credits_false_when_remaining_gt_2(): void
+    {
+        $school = School::factory()->create();
+        $student = User::factory()->create(['school_id' => $school->id]);
+
+        $pkg = LessonPackage::factory()->create([
+            'student_id' => $student->id,
+            'total_lessons' => 10,
+            'school_id' => $school->id,
+            'expires_at' => null,
+        ]);
+        $pkg->used_lessons = 2;
+        $pkg->save();
+        // remaining = 8
+
+        app()->instance('tenant.school_id', $school->id);
+
+        $stats = $this->action->execute($student);
+
+        $this->assertSame(8, $stats['stats']['remaining']);
+        $this->assertFalse($stats['stats']['low_credits']);
+    }
+
+    public function test_aluno_stats_includes_payment_history(): void
+    {
+        $school = School::factory()->create();
+        $student = User::factory()->create(['school_id' => $school->id]);
+
+        LessonPackage::factory()->create([
+            'student_id' => $student->id,
+            'total_lessons' => 10,
+            'school_id' => $school->id,
+            'expires_at' => null,
+        ]);
+
+        app()->instance('tenant.school_id', $school->id);
+
+        $stats = $this->action->execute($student);
+
+        $this->assertArrayHasKey('payment_history', $stats);
+    }
+
+    public function test_aluno_stats_has_expected_keys(): void
+    {
+        $school = School::factory()->create();
+        $student = User::factory()->create(['school_id' => $school->id]);
+
+        LessonPackage::factory()->create([
+            'student_id' => $student->id,
+            'total_lessons' => 10,
+            'school_id' => $school->id,
+            'expires_at' => null,
+        ]);
+
+        app()->instance('tenant.school_id', $school->id);
+
+        $stats = $this->action->execute($student);
+
+        $this->assertArrayHasKey('activePackage', $stats);
+        $this->assertArrayHasKey('warning', $stats);
+        $this->assertArrayHasKey('recentLessons', $stats);
+        $this->assertArrayHasKey('enrolledClasses', $stats);
+        $this->assertArrayHasKey('stats', $stats);
+        $this->assertArrayHasKey('progress', $stats);
+        $this->assertArrayHasKey('payment_history', $stats);
+    }
+
+    public function test_aluno_stats_warning_exhausted_when_no_active_package_but_had_one(): void
+    {
+        $school = School::factory()->create();
+        $student = User::factory()->create(['school_id' => $school->id]);
+
+        // Create an exhausted package so student "had" one
+        LessonPackage::factory()->exhausted()->create([
+            'student_id' => $student->id,
+            'total_lessons' => 5,
+            'school_id' => $school->id,
+        ]);
+
+        app()->instance('tenant.school_id', $school->id);
+
+        $stats = $this->action->execute($student);
+
+        $this->assertNull($stats['activePackage']);
+        $this->assertEquals('exhausted', $stats['warning']);
+    }
+
+    public function test_aluno_stats_warning_no_package_when_never_had_one(): void
+    {
+        $school = School::factory()->create();
+        $student = User::factory()->create(['school_id' => $school->id]);
+
+        app()->instance('tenant.school_id', $school->id);
+
+        $stats = $this->action->execute($student);
+
+        $this->assertNull($stats['activePackage']);
+        $this->assertEquals('no_package', $stats['warning']);
     }
 }

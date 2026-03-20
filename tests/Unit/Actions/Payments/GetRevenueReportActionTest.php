@@ -41,7 +41,7 @@ class GetRevenueReportActionTest extends TestCase
     {
         $result = $this->action->execute();
 
-        $this->assertSame(0.0, $result['total_revenue']);
+        $this->assertSame('0.00', $result['total_revenue']);
         $this->assertSame([], $result['revenue_by_month']);
         $this->assertSame([], $result['by_method']);
         $this->assertSame([], $result['recent_payments']);
@@ -65,7 +65,7 @@ class GetRevenueReportActionTest extends TestCase
 
         $result = $this->action->execute();
 
-        $this->assertEqualsWithDelta(500.00, $result['total_revenue'], 0.001);
+        $this->assertSame('500.00', $result['total_revenue']);
     }
 
     // --- total_students ---
@@ -136,9 +136,9 @@ class GetRevenueReportActionTest extends TestCase
 
         $this->assertArrayHasKey('pix', $byMethod);
         $this->assertArrayHasKey('cash', $byMethod);
-        $this->assertEqualsWithDelta(300.00, $byMethod['pix']['total'], 0.001);
+        $this->assertSame('300.00', $byMethod['pix']['total']);
         $this->assertSame(2, $byMethod['pix']['count']);
-        $this->assertEqualsWithDelta(50.00, $byMethod['cash']['total'], 0.001);
+        $this->assertSame('50.00', $byMethod['cash']['total']);
         $this->assertSame(1, $byMethod['cash']['count']);
     }
 
@@ -250,7 +250,7 @@ class GetRevenueReportActionTest extends TestCase
 
         $result = $this->action->execute($schoolA->id);
 
-        $this->assertEqualsWithDelta(100.00, $result['total_revenue'], 0.001);
+        $this->assertSame('100.00', $result['total_revenue']);
         $this->assertSame(1, $result['total_students']);
         $this->assertSame(1, $result['paid_packages_count']);
         $this->assertSame(1, $result['unpaid_packages_count']);
@@ -274,7 +274,7 @@ class GetRevenueReportActionTest extends TestCase
 
         $result = $this->action->execute();
 
-        $this->assertEqualsWithDelta(300.00, $result['total_revenue'], 0.001);
+        $this->assertSame('300.00', $result['total_revenue']);
         $this->assertSame(2, $result['total_students']);
     }
 
@@ -299,7 +299,7 @@ class GetRevenueReportActionTest extends TestCase
 
         $this->assertArrayHasKey('01/2026', $byMonth);
         $this->assertArrayHasKey('02/2026', $byMonth);
-        $this->assertEqualsWithDelta(300.00, $byMonth['01/2026']['total'], 0.001);
-        $this->assertEqualsWithDelta(50.00, $byMonth['02/2026']['total'], 0.001);
+        $this->assertSame('300.00', $byMonth['01/2026']['total']);
+        $this->assertSame('50.00', $byMonth['02/2026']['total']);
     }
 }

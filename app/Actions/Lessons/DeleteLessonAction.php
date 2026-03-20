@@ -33,8 +33,8 @@ class DeleteLessonAction
     public function execute(Lesson $lesson): void
     {
         DB::transaction(function () use ($lesson) {
-            // Only decrement if this lesson consumed a credit
-            if (in_array($lesson->status, self::CREDIT_CONSUMING_STATUSES)) {
+            // Only decrement if this lesson consumed a credit and has a package
+            if ($lesson->package_id !== null && in_array($lesson->status, self::CREDIT_CONSUMING_STATUSES)) {
                 $lesson->package()->lockForUpdate()->decrement('used_lessons');
             }
 

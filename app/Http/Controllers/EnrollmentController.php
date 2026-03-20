@@ -28,6 +28,11 @@ class EnrollmentController extends Controller
 
     public function destroy(TurmaClass $class, User $student, UnenrollStudentAction $action): RedirectResponse
     {
+        // C2: Guard against cross-tenant unenrollment
+        if (! auth()->user()->isSuperAdmin() && $student->school_id !== auth()->user()->school_id) {
+            abort(403);
+        }
+
         $action->execute($class, $student);
 
         return back()->with('success', 'Aluno removido da turma.');

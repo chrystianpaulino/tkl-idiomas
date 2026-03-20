@@ -10,6 +10,7 @@ use App\Notifications\PackageAlmostFinished;
 use App\Notifications\PackageFinished;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Atomically registers a new lesson for a student against their earliest-expiring active package.
@@ -43,11 +44,12 @@ class RegisterLessonAction
      */
     public function execute(TurmaClass $turmaClass, User $student, User $professor, array $data): Lesson
     {
-        return DB::transaction(function () use ($turmaClass, $student, $professor, $data) {
-            // Lock the earliest-expiring active package for this student
+        $lesson = DB::transaction(function () use ($turmaClass, $student, $professor, $data) {
+            // H8: Use COALESCE to sort NULL expires_at last — never-expiring packages
+            // should be consumed after time-limited ones
             $package = LessonPackage::where('student_id', $student->id)
                 ->active()
-                ->orderBy('expires_at')
+                ->orderByRaw("COALESCE(expires_at, '9999-12-31') ASC")
                 ->lockForUpdate()
                 ->firstOrFail();
 
@@ -59,16 +61,6 @@ class RegisterLessonAction
             $package->increment('used_lessons');
             $package->refresh(); // reload to get updated used_lessons
 
-            // Notifications fire INSIDE the transaction. If Lesson::create() fails after this point
-            // and the transaction rolls back, these notifications will have already been dispatched --
-            // the student may receive a false "package exhausted" alert. Accepted trade-off;
-            // revisit if notification reliability becomes a requirement.
-            if ($package->isExhausted()) {
-                $student->notify(new PackageFinished($package));
-            } elseif ($package->remaining === 1) {
-                $student->notify(new PackageAlmostFinished($package));
-            }
-
             return Lesson::create([
                 'class_id' => $turmaClass->id,
                 'student_id' => $student->id,
@@ -79,5 +71,28 @@ class RegisterLessonAction
                 'conducted_at' => $data['conducted_at'] ?? now(),
             ]);
         });
+
+        // M4: Dispatch notifications AFTER transaction commits to avoid false alarms on rollback
+        // L10: Wrap in try/catch so notification failures don't break the lesson registration flow
+        $package = $lesson->package;
+        if ($package !== null) {
+            DB::afterCommit(function () use ($student, $package) {
+                try {
+                    if ($package->isExhausted()) {
+                        $student->notify(new PackageFinished($package));
+                    } elseif ($package->remaining === 1) {
+                        $student->notify(new PackageAlmostFinished($package));
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('Failed to send package notification', [
+                        'student_id' => $student->id,
+                        'package_id' => $package->id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            });
+        }
+
+        return $lesson;
     }
 }

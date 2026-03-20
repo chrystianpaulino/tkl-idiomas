@@ -60,7 +60,7 @@ export default function Sidebar() {
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
                         <span className="text-white font-bold text-sm">
-                            {(school?.name ?? appName).charAt(0).toUpperCase()}
+                            {(school?.name ?? appName ?? '?').charAt(0).toUpperCase()}
                         </span>
                     </div>
                     <div className="min-w-0">

@@ -60,6 +60,7 @@ class SchoolControllerStoreTest extends TestCase
             'admin_name' => 'Admin Nova',
             'admin_email' => 'admin@novaescola.com',
             'admin_password' => 'secret1234',
+            'admin_password_confirmation' => 'secret1234',
         ], $overrides);
     }
 
@@ -149,6 +150,7 @@ class SchoolControllerStoreTest extends TestCase
         $response = $this->actingAs($superAdmin)
             ->post(route('platform.schools.store'), $this->validPayload([
                 'admin_password' => '12345678',
+                'admin_password_confirmation' => '12345678',
             ]));
 
         $response->assertSessionHasNoErrors();
