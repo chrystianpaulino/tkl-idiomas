@@ -6,6 +6,7 @@ use App\Actions\Lessons\RegisterLessonAction;
 use App\Models\Lesson;
 use App\Models\ScheduledLesson;
 use App\Models\User;
+use App\Support\Audit;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -76,10 +77,21 @@ class ConfirmScheduledLessonAction
             }
 
             // Update the scheduled_lesson status and link to the first lesson created
-            // (for group classes, link to first lesson as the representative record)
-            $scheduledLesson->update([
-                'status' => 'confirmed',
-                'lesson_id' => $lessons->first()?->id,
+            // (for group classes, link to first lesson as the representative record).
+            // lesson_id is outside $fillable so we set it via direct assignment;
+            // status remains in $fillable but we use direct assignment for symmetry.
+            $scheduledLesson->status = 'confirmed';
+            $scheduledLesson->lesson_id = $lessons->first()?->id;
+            $scheduledLesson->save();
+
+            Audit::log('lesson.scheduled_confirmed', [
+                'scheduled_lesson_id' => $scheduledLesson->id,
+                'class_id' => $turmaClass->id,
+                'school_id' => $scheduledLesson->school_id,
+                'professor_id' => $professor->id,
+                'lesson_count' => $lessons->count(),
+                'student_ids' => $students->pluck('id')->all(),
+                'first_lesson_id' => $lessons->first()?->id,
             ]);
 
             return $lessons;

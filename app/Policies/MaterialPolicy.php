@@ -19,18 +19,6 @@ use App\Models\User;
 class MaterialPolicy
 {
     /**
-     * Super-admins bypass all policy checks for cross-school management.
-     */
-    public function before(User $user, string $ability): ?bool
-    {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return null;
-    }
-
-    /**
      * Only admins and the class professor can upload materials.
      */
     public function create(User $user, TurmaClass $turmaClass): bool

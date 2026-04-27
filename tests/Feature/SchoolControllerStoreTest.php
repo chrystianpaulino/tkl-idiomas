@@ -59,8 +59,10 @@ class SchoolControllerStoreTest extends TestCase
             'email' => 'contato@novaescola.com',
             'admin_name' => 'Admin Nova',
             'admin_email' => 'admin@novaescola.com',
-            'admin_password' => 'secret1234',
-            'admin_password_confirmation' => 'secret1234',
+            // Must satisfy Password::defaults() strict rule:
+            // 12+ chars, mixed case, number, symbol.
+            'admin_password' => 'StrongPass!2026',
+            'admin_password_confirmation' => 'StrongPass!2026',
         ], $overrides);
     }
 
@@ -129,7 +131,8 @@ class SchoolControllerStoreTest extends TestCase
         $response->assertSessionHasErrors('admin_email');
     }
 
-    // ── StoreSchoolRequest validation: admin_password min 8 chars
+    // ── StoreSchoolRequest validation: admin_password follows Password::defaults
+    //     (min 12, mixed case, numbers, symbols)
 
     public function test_store_rejects_short_admin_password(): void
     {
@@ -143,14 +146,41 @@ class SchoolControllerStoreTest extends TestCase
         $response->assertSessionHasErrors('admin_password');
     }
 
-    public function test_store_accepts_password_exactly_8_chars(): void
+    public function test_store_rejects_password_below_12_chars(): void
+    {
+        $superAdmin = $this->superAdmin();
+
+        // 11 chars with symbols/case/numbers, but below the new 12-char floor.
+        $response = $this->actingAs($superAdmin)
+            ->post(route('platform.schools.store'), $this->validPayload([
+                'admin_password' => 'StrongP!23a',
+                'admin_password_confirmation' => 'StrongP!23a',
+            ]));
+
+        $response->assertSessionHasErrors('admin_password');
+    }
+
+    public function test_store_rejects_password_without_symbol(): void
     {
         $superAdmin = $this->superAdmin();
 
         $response = $this->actingAs($superAdmin)
             ->post(route('platform.schools.store'), $this->validPayload([
-                'admin_password' => '12345678',
-                'admin_password_confirmation' => '12345678',
+                'admin_password' => 'StrongPass2026',
+                'admin_password_confirmation' => 'StrongPass2026',
+            ]));
+
+        $response->assertSessionHasErrors('admin_password');
+    }
+
+    public function test_store_accepts_strong_password_meeting_defaults(): void
+    {
+        $superAdmin = $this->superAdmin();
+
+        $response = $this->actingAs($superAdmin)
+            ->post(route('platform.schools.store'), $this->validPayload([
+                'admin_password' => 'StrongPass!2026',
+                'admin_password_confirmation' => 'StrongPass!2026',
             ]));
 
         $response->assertSessionHasNoErrors();

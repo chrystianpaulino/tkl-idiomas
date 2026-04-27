@@ -23,4 +23,19 @@ class MaterialFactory extends Factory
             'school_id' => School::factory(),
         ];
     }
+
+    /**
+     * Bypass mass-assignment guards when seeding test data.
+     *
+     * Material::$fillable intentionally excludes class_id, uploaded_by, and
+     * school_id. Factories need to populate those fields, so we forceFill all
+     * attributes regardless of $fillable.
+     */
+    public function newModel(array $attributes = []): Material
+    {
+        $model = new Material;
+        $model->forceFill($attributes);
+
+        return $model;
+    }
 }

@@ -27,4 +27,19 @@ class ScheduleFactory extends Factory
     {
         return $this->state(['active' => false]);
     }
+
+    /**
+     * Bypass mass-assignment guards when seeding test data.
+     *
+     * Schedule::$fillable intentionally excludes class_id and school_id.
+     * Factories need to populate those fields, so we forceFill all attributes
+     * regardless of $fillable.
+     */
+    public function newModel(array $attributes = []): Schedule
+    {
+        $model = new Schedule;
+        $model->forceFill($attributes);
+
+        return $model;
+    }
 }

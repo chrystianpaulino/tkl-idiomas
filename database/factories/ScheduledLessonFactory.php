@@ -37,4 +37,19 @@ class ScheduledLessonFactory extends Factory
             'cancelled_reason' => $this->faker->sentence(),
         ]);
     }
+
+    /**
+     * Bypass mass-assignment guards when seeding test data.
+     *
+     * ScheduledLesson::$fillable intentionally excludes schedule_id, class_id,
+     * lesson_id, and school_id. Factories need to populate those fields, so
+     * we forceFill all attributes regardless of $fillable.
+     */
+    public function newModel(array $attributes = []): ScheduledLesson
+    {
+        $model = new ScheduledLesson;
+        $model->forceFill($attributes);
+
+        return $model;
+    }
 }

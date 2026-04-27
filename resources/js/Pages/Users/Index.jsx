@@ -23,7 +23,7 @@ function SearchIcon({ className }) {
 
 const roleTabs = [
     { value: '', label: 'Todos' },
-    { value: 'admin', label: 'Admin' },
+    { value: 'school_admin', label: 'Admin' },
     { value: 'professor', label: 'Professor' },
     { value: 'aluno', label: 'Aluno' },
 ];
@@ -53,7 +53,14 @@ export default function UsersIndex({ users, filters }) {
                 <div className="flex items-center gap-3">
                     <Avatar name={row.name} size="sm" />
                     <div>
-                        <p className="text-sm font-medium text-gray-900">{row.name}</p>
+                        <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium text-gray-900">{row.name}</p>
+                            {row.has_pending_invite && (
+                                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                                    Convite pendente
+                                </span>
+                            )}
+                        </div>
                         <p className="text-xs text-gray-500">{row.email}</p>
                     </div>
                 </div>
@@ -69,6 +76,19 @@ export default function UsersIndex({ users, filters }) {
             label: '',
             render: (row) => (
                 <div className="flex items-center gap-3 justify-end">
+                    {row.has_pending_invite && (
+                        <button
+                            type="button"
+                            onClick={() => {
+                                router.post(`/admin/users/${row.id}/invite/resend`, {}, {
+                                    preserveScroll: true,
+                                });
+                            }}
+                            className="text-sm font-medium text-amber-600 hover:text-amber-700 transition-colors"
+                        >
+                            Reenviar convite
+                        </button>
+                    )}
                     <Link href={`/admin/users/${row.id}`} className="text-sm font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
                         Ver
                     </Link>

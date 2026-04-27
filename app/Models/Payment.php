@@ -35,16 +35,20 @@ class Payment extends Model
 {
     use BelongsToSchool, HasFactory;
 
+    /**
+     * Mass-assignment safe fields only.
+     *
+     * student_id, lesson_package_id, registered_by and school_id are foreign
+     * keys / tenant ownership and must be set explicitly by Action classes
+     * (RegisterPaymentAction). Removing them from $fillable prevents an
+     * accidental future ->update($validated) from forging the audit trail.
+     */
     protected $fillable = [
-        'student_id',
-        'lesson_package_id',
-        'registered_by',
         'amount',
         'currency',
         'method',
         'paid_at',
         'notes',
-        'school_id',
     ];
 
     protected function casts(): array

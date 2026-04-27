@@ -13,7 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
  * to enforce role-based access at the routing layer (first line of defense before
  * FormRequest::authorize and Policy checks).
  *
- * Usage: ->middleware('role:admin,professor')
+ * Usage: ->middleware('role:school_admin,professor')
  *
  * Aborts with 403 if the authenticated user's role is not in the allowed list.
  * Also aborts for unauthenticated users (null role).
@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\Response;
 class EnsureUserHasRole
 {
     /**
-     * @param  string  ...$roles  Allowed role names (e.g., 'admin', 'professor', 'aluno')
+     * @param  string  ...$roles  Allowed role names (e.g., 'school_admin', 'professor', 'aluno')
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {

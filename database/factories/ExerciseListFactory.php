@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\ExerciseList;
 use App\Models\School;
 use App\Models\TurmaClass;
 use App\Models\User;
@@ -34,5 +35,20 @@ class ExerciseListFactory extends Factory
         return $this->state([
             'due_date' => null,
         ]);
+    }
+
+    /**
+     * Bypass mass-assignment guards when seeding test data.
+     *
+     * ExerciseList::$fillable intentionally excludes class_id, lesson_id,
+     * created_by, and school_id. Factories need to populate those fields,
+     * so we forceFill all attributes regardless of $fillable.
+     */
+    public function newModel(array $attributes = []): ExerciseList
+    {
+        $model = new ExerciseList;
+        $model->forceFill($attributes);
+
+        return $model;
     }
 }

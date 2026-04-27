@@ -3,6 +3,16 @@ import PageHeader from '@/Components/PageHeader';
 import Badge from '@/Components/Badge';
 import { Head, Link, useForm, router } from '@inertiajs/react';
 
+const SUPPORTED_CURRENCIES = ['BRL', 'USD', 'EUR'];
+
+function formatPrice(value, currency = 'BRL') {
+    if (value == null || value === '') return null;
+    const numeric = Number(value);
+    if (Number.isNaN(numeric)) return null;
+    const code = SUPPORTED_CURRENCIES.includes(currency) ? currency : 'BRL';
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: code }).format(numeric);
+}
+
 function CubeIcon({ className }) {
     return (
         <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -59,6 +69,8 @@ function getPackageStatus(pkg) {
 export default function PackagesIndex({ student, packages }) {
     const { data, setData, post, processing, errors, reset } = useForm({
         total_lessons: 10,
+        price: '',
+        currency: 'BRL',
         expires_at: '',
     });
 
@@ -102,6 +114,37 @@ export default function PackagesIndex({ student, packages }) {
                                     className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
                                 />
                                 {errors.total_lessons && <p className="mt-1.5 text-xs text-rose-600">{errors.total_lessons}</p>}
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1.5">Preco (R$)</label>
+                                    <input
+                                        id="price"
+                                        type="number"
+                                        step="0.01"
+                                        min="0.01"
+                                        placeholder="220.00"
+                                        value={data.price}
+                                        onChange={(e) => setData('price', e.target.value)}
+                                        className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow"
+                                    />
+                                    {errors.price && <p className="mt-1.5 text-xs text-rose-600">{errors.price}</p>}
+                                </div>
+                                <div>
+                                    <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-1.5">Moeda</label>
+                                    <select
+                                        id="currency"
+                                        value={data.currency}
+                                        onChange={(e) => setData('currency', e.target.value)}
+                                        className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-shadow bg-white"
+                                    >
+                                        <option value="BRL">BRL</option>
+                                        <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
+                                    </select>
+                                    {errors.currency && <p className="mt-1.5 text-xs text-rose-600">{errors.currency}</p>}
+                                </div>
                             </div>
 
                             <div>
@@ -153,6 +196,11 @@ export default function PackagesIndex({ student, packages }) {
                                                 </div>
                                                 <div>
                                                     <p className="text-base font-semibold text-gray-900">{pkg.total_lessons} aulas</p>
+                                                    {formatPrice(pkg.price, pkg.currency) && (
+                                                        <p className="text-xs font-medium text-emerald-700 mt-0.5">
+                                                            {formatPrice(pkg.price, pkg.currency)}
+                                                        </p>
+                                                    )}
                                                     <p className="text-xs text-gray-500 mt-0.5">
                                                         Compra: {pkg.created_at ? new Date(pkg.created_at).toLocaleDateString('pt-BR') : '\u2014'}
                                                     </p>

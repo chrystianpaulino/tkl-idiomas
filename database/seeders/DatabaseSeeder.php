@@ -13,13 +13,23 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // Default school (tenant)
-        $school = School::create([
-            'name' => 'TKL Idiomas',
-            'slug' => 'tkl-idiomas',
-            'email' => 'contato@tkl.com',
-            'active' => true,
-        ]);
+        // Default school (tenant). Idempotent: the migration
+        // 2026_03_16_200002_seed_default_school_and_populate_school_ids
+        // may have already created this row.
+        $school = School::firstOrCreate(
+            ['slug' => 'tkl-idiomas'],
+            [
+                'name' => 'TKL Idiomas',
+                'email' => 'contato@tkl.com',
+                'active' => true,
+            ]
+        );
+
+        // After Wave 9 (invite flow) the User model implements MustVerifyEmail,
+        // so the `verified` middleware now actually blocks unverified users.
+        // Seed accounts are convenience accounts for local development -- they
+        // bypass the invite flow and must therefore be flagged as already
+        // verified, otherwise every dev session would 302 to /verify-email.
 
         // Super admin (platform-level, no school)
         $superAdmin = new User;
@@ -27,6 +37,7 @@ class DatabaseSeeder extends Seeder
         $superAdmin->email = 'super@tkl.com';
         $superAdmin->password = Hash::make('password');
         $superAdmin->role = 'super_admin';
+        $superAdmin->email_verified_at = now();
         $superAdmin->save();
 
         // School admin (tenant-level, belongs to the default school)
@@ -36,6 +47,7 @@ class DatabaseSeeder extends Seeder
         $admin->password = Hash::make('password');
         $admin->role = 'school_admin';
         $admin->school_id = $school->id;
+        $admin->email_verified_at = now();
         $admin->save();
 
         // 3 Professors
@@ -47,6 +59,7 @@ class DatabaseSeeder extends Seeder
             $professor->password = Hash::make('password');
             $professor->role = 'professor';
             $professor->school_id = $school->id;
+            $professor->email_verified_at = now();
             $professor->save();
             $professors->push($professor);
         }
@@ -66,12 +79,15 @@ class DatabaseSeeder extends Seeder
             $student->password = Hash::make('password');
             $student->role = 'aluno';
             $student->school_id = $school->id;
+            $student->email_verified_at = now();
             $student->save();
 
-            // 20-lesson package for each student
+            // 20-lesson package for each student (R$ 1.100,00 -- R$ 55 per lesson)
             $package = new LessonPackage;
             $package->student_id = $student->id;
             $package->total_lessons = 20;
+            $package->price = 1100.00;
+            $package->currency = 'BRL';
             $package->purchased_at = now();
             $package->expires_at = now()->addYear();
             $package->school_id = $school->id;

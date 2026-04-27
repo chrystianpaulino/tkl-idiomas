@@ -44,17 +44,21 @@ class Lesson extends Model
 {
     use BelongsToSchool, HasFactory;
 
+    /**
+     * Mass-assignment safe fields only.
+     *
+     * Foreign keys (class_id, student_id, professor_id, package_id) and
+     * school_id are intentionally excluded: they are tenant/ownership keys
+     * and must be set explicitly by Action classes via direct attribute
+     * assignment. Dropping them here makes a future $model->update($validated)
+     * call structurally incapable of mutating ownership.
+     */
     protected $fillable = [
-        'class_id',
-        'student_id',
-        'professor_id',
-        'package_id',
         'title',
         'notes',
         'conducted_at',
         'status',
         'scheduled_at',
-        'school_id',
     ];
 
     protected function casts(): array

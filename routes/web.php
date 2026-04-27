@@ -11,6 +11,8 @@ use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\PlatformDashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ScheduleController;
+use App\Http\Controllers\ScheduledLessonController;
 use App\Http\Controllers\SchoolController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -18,8 +20,10 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     if (auth()->check()) {
         $route = auth()->user()->isSuperAdmin() ? 'platform.dashboard' : 'dashboard';
+
         return redirect()->route($route);
     }
+
     return inertia('Welcome');
 })->name('home');
 
@@ -37,7 +41,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // IMPORTANTE: Este grupo é registado ANTES de /classes/{class} para que
     // /classes/create não seja capturado pelo wildcard como se fosse um ID de turma.
 
-    Route::middleware('role:admin,school_admin,professor')->group(function () {
+    Route::middleware('role:school_admin,professor')->group(function () {
         Route::get('/classes/create', [ClassController::class, 'create'])->name('classes.create');
         Route::post('/classes', [ClassController::class, 'store'])->name('classes.store');
         Route::get('/classes/{class}/edit', [ClassController::class, 'edit'])->name('classes.edit');
@@ -78,10 +82,45 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/classes/{class}/exercise-lists/{exerciseList}/submit', [ExerciseSubmissionController::class, 'create'])->name('classes.exercise-lists.submit');
     Route::post('/classes/{class}/exercise-lists/{exerciseList}/submit', [ExerciseSubmissionController::class, 'store'])->name('classes.exercise-lists.submit.store');
 
+    // ── Agendamentos (Schedules) — gestão (admin/professor) ─────────────────
+
+    Route::middleware('role:school_admin,professor')->group(function () {
+        Route::get('/schedules/create', [ScheduleController::class, 'create'])->name('schedules.create');
+        Route::post('/schedules', [ScheduleController::class, 'store'])->name('schedules.store');
+        Route::get('/schedules/{schedule}/edit', [ScheduleController::class, 'edit'])->name('schedules.edit');
+        Route::put('/schedules/{schedule}', [ScheduleController::class, 'update'])->name('schedules.update');
+        Route::delete('/schedules/{schedule}', [ScheduleController::class, 'destroy'])->name('schedules.destroy');
+    });
+
+    // Schedules — leitura para todos os papéis autenticados
+    Route::get('/schedules', [ScheduleController::class, 'index'])->name('schedules.index');
+
+    // ── Scheduled Lessons (slots concretos) ─────────────────────────────────
+
+    Route::get('/scheduled-lessons', [ScheduledLessonController::class, 'index'])->name('scheduled-lessons.index');
+
+    Route::middleware('role:school_admin,professor')->group(function () {
+        Route::post('/scheduled-lessons/{scheduledLesson}/confirm', [ScheduledLessonController::class, 'confirm'])
+            ->name('scheduled-lessons.confirm');
+        Route::post('/scheduled-lessons/{scheduledLesson}/cancel', [ScheduledLessonController::class, 'cancel'])
+            ->name('scheduled-lessons.cancel');
+    });
+
     // ── Admin — gestão global da escola ─────────────────────────────────────
 
-    Route::middleware('role:admin,school_admin')->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware('role:school_admin')->prefix('admin')->name('admin.')->group(function () {
         // Usuários
+        // Resend invite must be registered BEFORE the resource definition so
+        // /admin/users/{user}/invite/resend is matched as a literal segment
+        // rather than a wildcard {user}-with-suffix combination.
+        // Override the inherited role middleware so super_admin can also
+        // reissue invites cross-school -- the UserPolicy::resendInvite gate
+        // (combined with the global super_admin Gate::before bypass) is the
+        // authoritative authorization for this endpoint.
+        Route::post('/users/{user}/invite/resend', [UserController::class, 'resendInvite'])
+            ->withoutMiddleware('role:school_admin')
+            ->middleware('role:school_admin,super_admin')
+            ->name('users.invite.resend');
         Route::resource('users', UserController::class);
 
         // Pacotes de aulas por aluno

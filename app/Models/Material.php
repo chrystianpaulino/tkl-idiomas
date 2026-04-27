@@ -33,13 +33,19 @@ class Material extends Model
 {
     use BelongsToSchool, HasFactory;
 
+    /**
+     * Mass-assignment safe fields only.
+     *
+     * class_id (parent class), uploaded_by (uploader user) and school_id
+     * (tenant) are foreign keys / ownership and must be assigned directly by
+     * UploadMaterialAction. Excluding them from $fillable removes the only
+     * vector through which a future ->update($validated) could re-parent a
+     * material into another class or another tenant.
+     */
     protected $fillable = [
-        'class_id',
-        'uploaded_by',
         'title',
         'file_path',
         'description',
-        'school_id',
     ];
 
     protected $appends = ['download_url'];

@@ -8,25 +8,29 @@ function buildNavItems(role, school) {
                 { label: 'Escolas', href: '/platform/schools', icon: '⊟' },
             ];
         case 'school_admin':
-        case 'admin':
             return [
                 { label: 'Dashboard', href: '/dashboard', icon: '◈' },
                 ...(school ? [{ label: 'Minha Escola', href: `/admin/schools/${school.id}/edit`, icon: '⊟' }] : []),
                 { label: 'Professores', href: '/admin/users?role=professor', icon: '◎' },
                 { label: 'Alunos', href: '/admin/users?role=aluno', icon: '◎' },
                 { label: 'Turmas', href: '/classes', icon: '⊞' },
+                { label: 'Agendamentos', href: '/scheduled-lessons', icon: '◷' },
+                { label: 'Regras de Agenda', href: '/schedules', icon: '◴' },
                 { label: 'Relatório Financeiro', href: '/admin/payments/report', icon: '◇' },
             ];
         case 'professor':
             return [
                 { label: 'Dashboard', href: '/dashboard', icon: '◈' },
                 { label: 'Minhas Turmas', href: '/classes', icon: '⊞' },
+                { label: 'Agendamentos', href: '/scheduled-lessons', icon: '◷' },
+                { label: 'Regras de Agenda', href: '/schedules', icon: '◴' },
             ];
         case 'aluno':
         default:
             return [
                 { label: 'Dashboard', href: '/dashboard', icon: '◈' },
                 { label: 'Minhas Turmas', href: '/classes', icon: '⊞' },
+                { label: 'Agendamentos', href: '/scheduled-lessons', icon: '◷' },
             ];
     }
 }
@@ -34,7 +38,6 @@ function buildNavItems(role, school) {
 const roleLabels = {
     super_admin: 'Dono da Plataforma',
     school_admin: 'Administrador',
-    admin: 'Administrador',
     professor: 'Professor',
     aluno: 'Aluno',
 };
@@ -54,22 +57,38 @@ export default function Sidebar() {
     const currentPath = typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
 
     return (
-        <aside className="w-64 bg-slate-900 flex flex-col flex-shrink-0 border-r border-slate-800">
+        <aside
+            className="w-64 flex flex-col flex-shrink-0 border-r border-slate-800"
+            style={{ backgroundColor: 'var(--color-secondary, #0f172a)' }}
+        >
             {/* Logo */}
             <div className="px-5 py-5 border-b border-slate-800">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span className="text-white font-bold text-sm">
-                            {(school?.name ?? appName ?? '?').charAt(0).toUpperCase()}
-                        </span>
+                {school?.logo_url ? (
+                    <div className="flex items-center justify-start">
+                        <img
+                            src={school.logo_url}
+                            alt={school.name}
+                            className="h-10 w-auto max-w-full object-contain"
+                        />
                     </div>
-                    <div className="min-w-0">
-                        <p className="text-white font-semibold text-sm leading-tight truncate">
-                            {school?.name ?? appName}
-                        </p>
-                        <p className="text-slate-500 text-xs">Sistema de Gestão</p>
+                ) : (
+                    <div className="flex items-center gap-3">
+                        <div
+                            className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                            style={{ backgroundColor: 'var(--color-primary, #4f46e5)' }}
+                        >
+                            <span className="text-white font-bold text-sm">
+                                {(school?.name ?? appName ?? '?').charAt(0).toUpperCase()}
+                            </span>
+                        </div>
+                        <div className="min-w-0">
+                            <p className="text-white font-semibold text-sm leading-tight truncate">
+                                {school?.name ?? appName}
+                            </p>
+                            <p className="text-slate-500 text-xs">Sistema de Gestão</p>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
             {/* Nav */}
@@ -85,9 +104,10 @@ export default function Sidebar() {
                             href={item.href}
                             className={`group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                                 isActive
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/30'
+                                    ? 'text-white shadow-lg shadow-indigo-900/30'
                                     : 'text-slate-400 hover:bg-slate-800 hover:text-slate-100'
                             }`}
+                            style={isActive ? { backgroundColor: 'var(--color-primary, #4f46e5)' } : undefined}
                         >
                             <span className={`text-base transition-transform group-hover:scale-110`}>
                                 {item.icon}

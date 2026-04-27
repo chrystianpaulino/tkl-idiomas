@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Log;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Psr\Log\LoggerInterface;
 use Tests\TestCase;
 
 class ProvisionSchoolActionFuzzTest extends TestCase
@@ -161,21 +162,28 @@ class ProvisionSchoolActionFuzzTest extends TestCase
 
     public function test_log_does_not_contain_password(): void
     {
-        Log::spy();
+        // Wave 8 / Fix M4: provisioning now writes to the dedicated `audit`
+        // channel via App\Support\Audit. We spy on that channel specifically
+        // so this regression test continues to assert the original property
+        // (the plaintext admin password must never appear anywhere in logs)
+        // against the new audit emission path.
+        $auditSpy = \Mockery::spy(LoggerInterface::class);
+        Log::shouldReceive('channel')->with('audit')->andReturn($auditSpy);
 
         $data = $this->validData(['admin_password' => 'super-secret-p@ssw0rd!']);
 
         $this->action->execute($data);
 
-        // Verify the Log::info call for provisioning does not contain the password
-        Log::shouldHaveReceived('info')->withArgs(function (string $message, array $context) use ($data) {
-            // The context must NOT contain admin_password key
-            if (isset($context['admin_password'])) {
-                return false;
+        $auditSpy->shouldHaveReceived('info')->withArgs(function (string $message, array $context) use ($data) {
+            // No password-shaped keys in the context.
+            foreach (['admin_password', 'password', 'admin_password_confirmation'] as $key) {
+                if (isset($context[$key])) {
+                    return false;
+                }
             }
-            // The serialized context must NOT contain the plain-text password
+            // The serialized context must NOT contain the plain-text password.
             $serialized = json_encode($context);
-            if (str_contains($serialized, $data['admin_password'])) {
+            if ($serialized !== false && str_contains($serialized, $data['admin_password'])) {
                 return false;
             }
 

@@ -127,6 +127,21 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        // Audit trail (Wave 8 / Fix M4): security-sensitive events go here.
+        // Distinct from the application log so post-mortems can grep without
+        // wading through routine debug output. 90-day retention covers the
+        // typical incident-response window; tune via LOG_AUDIT_DAYS if needed.
+        // Includes auth (login success/failed/logout/lockout), user CRUD,
+        // school provisioning/updates/deletion, payment registration, and
+        // scheduled lesson confirm/cancel. See \App\Support\Audit.
+        'audit' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/audit.log'),
+            'level' => env('LOG_LEVEL', 'info'),
+            'days' => env('LOG_AUDIT_DAYS', 90),
+            'replace_placeholders' => true,
+        ],
+
     ],
 
 ];

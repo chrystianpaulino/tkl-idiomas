@@ -209,7 +209,6 @@ class TenantIsolationInvariantTest extends TestCase
         return [
             'super_admin' => ['super_admin',  ['isSuperAdmin' => true,  'isSchoolAdmin' => false, 'isProfessor' => false, 'isAluno' => false]],
             'school_admin' => ['school_admin', ['isSuperAdmin' => false, 'isSchoolAdmin' => true,  'isProfessor' => false, 'isAluno' => false]],
-            'admin' => ['admin',        ['isSuperAdmin' => false, 'isSchoolAdmin' => false, 'isProfessor' => false, 'isAluno' => false]],
             'professor' => ['professor',    ['isSuperAdmin' => false, 'isSchoolAdmin' => false, 'isProfessor' => true,  'isAluno' => false]],
             'aluno' => ['aluno',        ['isSuperAdmin' => false, 'isSchoolAdmin' => false, 'isProfessor' => false, 'isAluno' => true]],
         ];
@@ -245,30 +244,20 @@ class TenantIsolationInvariantTest extends TestCase
             'isAluno() should be '.($expected['isAluno'] ? 'true' : 'false')." for role '{$role}'"
         );
 
-        // Invariant: exactly one of the four specific helpers returns true,
-        // EXCEPT for the legacy 'admin' role where none of the four returns true
+        // Invariant: exactly one of the four specific helpers returns true.
         $trueCount = array_sum([
             (int) $user->isSuperAdmin(),
             (int) $user->isSchoolAdmin(),
             (int) $user->isProfessor(),
             (int) $user->isAluno(),
         ]);
+        $this->assertSame(1, $trueCount, "Exactly one specific role helper should return true for role '{$role}'");
 
-        if ($role === 'admin') {
-            // Legacy admin role: none of the four specific helpers returns true
-            $this->assertSame(0, $trueCount, "Legacy 'admin' role: none of the four specific helpers should return true");
-            // But isAdmin() convenience helper returns true
-            $this->assertTrue($user->isAdmin(), "isAdmin() must return true for legacy 'admin' role");
-        } else {
-            $this->assertSame(1, $trueCount, "Exactly one specific role helper should return true for role '{$role}'");
-        }
-
-        // isAdmin() is a convenience alias: true for 'admin' and 'school_admin' only
-        $expectIsAdmin = in_array($role, ['admin', 'school_admin'], true);
+        // isAdmin() is a convenience alias of isSchoolAdmin() since the legacy 'admin' role was retired.
         $this->assertSame(
-            $expectIsAdmin,
+            $expected['isSchoolAdmin'],
             $user->isAdmin(),
-            'isAdmin() should be '.($expectIsAdmin ? 'true' : 'false')." for role '{$role}'"
+            "isAdmin() should mirror isSchoolAdmin() for role '{$role}'"
         );
     }
 

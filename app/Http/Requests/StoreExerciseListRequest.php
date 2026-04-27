@@ -26,9 +26,19 @@ class StoreExerciseListRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:2000'],
             'due_date' => ['nullable', 'date', 'after_or_equal:today'],
             'lesson_id' => ['nullable', Rule::exists('lessons', 'id')->where('class_id', $this->route('class')->id)],
-            'exercises' => ['required', 'array', 'min:1'],
+            // max:200 caps how many questions a single list can contain.
+            // Without it, a professor could POST a payload with millions of
+            // entries and force the DB into an expensive transactional insert.
+            'exercises' => ['required', 'array', 'min:1', 'max:200'],
             'exercises.*.question' => ['required', 'string', 'max:2000'],
             'exercises.*.type' => ['required', 'in:text,file'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'exercises.max' => 'Uma lista pode conter no máximo 200 exercícios.',
         ];
     }
 }

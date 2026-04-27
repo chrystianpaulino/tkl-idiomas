@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\SecureHeaders;
 use App\Http\Middleware\SetTenantContext;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -29,6 +30,9 @@ return Application::configure(basePath: dirname(__DIR__))
                 SubstituteBindings::class,
                 HandleInertiaRequests::class,
                 AddLinkHeadersForPreloadedAssets::class,
+                // SecureHeaders runs last so it sets headers on every web
+                // response, including 4xx/5xx and redirects produced upstream.
+                SecureHeaders::class,
             ],
         );
 

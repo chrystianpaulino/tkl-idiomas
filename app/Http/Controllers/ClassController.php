@@ -59,6 +59,14 @@ class ClassController extends Controller
         $this->authorize('create', TurmaClass::class);
 
         $professor = User::findOrFail($request->validated('professor_id'));
+
+        // Defense-in-depth: guard against cross-tenant professor assignment.
+        // StoreClassRequest already filters by school_id at validation, but
+        // the User model is not BelongsToSchool scoped, so we re-check here.
+        if (! auth()->user()->isSuperAdmin() && $professor->school_id !== auth()->user()->school_id) {
+            abort(403);
+        }
+
         $action->execute($request->validated(), $professor);
 
         return redirect()->route('classes.index')->with('success', 'Turma criada com sucesso.');

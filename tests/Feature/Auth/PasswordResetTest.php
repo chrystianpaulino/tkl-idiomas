@@ -59,8 +59,10 @@ class PasswordResetTest extends TestCase
             $response = $this->post('/reset-password', [
                 'token' => $notification->token,
                 'email' => $user->email,
-                'password' => 'password',
-                'password_confirmation' => 'password',
+                // Must satisfy Password::defaults() strict rule:
+                // 12+ chars, mixed case, number, symbol.
+                'password' => 'StrongPass!2026',
+                'password_confirmation' => 'StrongPass!2026',
             ]);
 
             $response

@@ -9,6 +9,8 @@
 .env
 .env.backup
 .env.production
+.env.local
+.env.*.local
 .phpactor.json
 .phpunit.result.cache
 Homestead.json
@@ -22,3 +24,33 @@ yarn-error.log
 /.vscode
 /.zed
 .DS_Store
+
+# VSCode "Local History" plugin — auto-saves snapshots of edited files,
+# including .env. NEVER commit. (Caused near-miss in security audit.)
+/.history
+
+# Local SQLite databases (project uses MySQL in dev; keep defensive)
+/database/*.sqlite
+/database/*.sqlite-journal
+/database/*.sqlite-wal
+/database/*.sqlite-shm
+
+# Editor backup / swap files
+*.swp
+*.swo
+*~
+.*~
+*.bak
+
+# macOS / OS junk
+._*
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# Composer local install
+/composer.phar
+
+# Coverage reports (if generated locally)
+/coverage
+/.nyc_output

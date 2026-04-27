@@ -9,6 +9,7 @@ use App\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -44,14 +45,15 @@ class ProvisionSchoolActionAdditionalFuzzTest extends TestCase
         ], $overrides);
     }
 
-    // ── Password boundary: exactly 7 chars (below min:8) ───────────
+    // ── Password boundary: below min:12 (Password::defaults strict) ─
 
     public function test_admin_password_exactly_7_chars_is_rejected_by_validation_rules(): void
     {
-        // StoreSchoolRequest requires min:8. The action itself does NOT validate,
-        // so passing 7 chars directly to the action will succeed at DB level.
-        // This test documents that the validation gate is in StoreSchoolRequest,
-        // not in the action. We verify the action stores the hash regardless.
+        // StoreSchoolRequest enforces Password::defaults(): min:12 + mixed case
+        // + numbers + symbols. The action itself does NOT validate, so passing
+        // 7 chars directly to the action will succeed at DB level. This test
+        // documents that the validation gate is in StoreSchoolRequest, not in
+        // the action. We verify the action stores the hash regardless.
         $sevenCharPassword = 'Abc123!';
         $this->assertSame(7, strlen($sevenCharPassword));
 
@@ -71,24 +73,47 @@ class ProvisionSchoolActionAdditionalFuzzTest extends TestCase
         $rules = (new StoreSchoolRequest)->rules();
         $this->assertContains('confirmed', $rules['admin_password']);
         $this->assertTrue(
-            collect($rules['admin_password'])->contains(fn ($rule) => $rule instanceof \Illuminate\Validation\Rules\Password),
+            collect($rules['admin_password'])->contains(fn ($rule) => $rule instanceof Password),
             'admin_password rules should include a Password rule instance'
         );
     }
 
-    // ── Password boundary: exactly 8 chars (at min:8) ──────────────
+    // ── Password boundary: 8 chars no longer accepted under strict rule ─
 
-    public function test_admin_password_exactly_8_chars_is_accepted(): void
+    public function test_admin_password_exactly_8_chars_is_rejected_by_strict_rules(): void
     {
+        // Old policy was min:8. Strict policy is min:12 + mixed + numbers + symbols.
+        // 8 chars (even with all complexity) must now fail validation.
         $eightCharPassword = 'Abc1234!';
         $this->assertSame(8, strlen($eightCharPassword));
 
+        $rules = (new StoreSchoolRequest)->rules();
+
+        $validator = Validator::make(
+            ['admin_password' => $eightCharPassword],
+            ['admin_password' => $rules['admin_password']]
+        );
+
+        $this->assertTrue(
+            $validator->fails(),
+            'Expected 8-char password to fail validation under strict Password::defaults().'
+        );
+    }
+
+    // ── Password boundary: 12+ chars with full complexity accepted ─
+
+    public function test_admin_password_meeting_strict_defaults_is_accepted(): void
+    {
+        // 15 chars, mixed case, number, symbol — satisfies Password::defaults().
+        $strongPassword = 'StrongPass!2026';
+        $this->assertGreaterThanOrEqual(12, strlen($strongPassword));
+
         $result = $this->action->execute($this->validData([
-            'admin_password' => $eightCharPassword,
+            'admin_password' => $strongPassword,
         ]));
 
         $this->assertNotNull($result['admin']->id);
-        $this->assertTrue(password_verify($eightCharPassword, $result['admin']->password));
+        $this->assertTrue(password_verify($strongPassword, $result['admin']->password));
     }
 
     // ── Empty password ─────────────────────────────────────────────

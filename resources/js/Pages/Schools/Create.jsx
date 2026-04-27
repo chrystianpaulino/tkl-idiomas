@@ -13,6 +13,12 @@ function slugify(text) {
         .trim();
 }
 
+// Defaults mirror Tailwind indigo-600 / slate-900 — kept in sync with the
+// migration-level column defaults so a school created without customization
+// renders identically to the legacy hardcoded UI.
+const DEFAULT_PRIMARY = '#4f46e5';
+const DEFAULT_SECONDARY = '#0f172a';
+
 export default function SchoolsCreate() {
     const { auth } = usePage().props;
     const base = auth?.user?.role === 'super_admin' ? '/platform/schools' : '/admin/schools';
@@ -21,6 +27,9 @@ export default function SchoolsCreate() {
         name: '',
         slug: '',
         email: '',
+        logo: null,
+        primary_color: DEFAULT_PRIMARY,
+        secondary_color: DEFAULT_SECONDARY,
         admin_name: '',
         admin_email: '',
         admin_password: '',
@@ -36,7 +45,8 @@ export default function SchoolsCreate() {
 
     function submit(e) {
         e.preventDefault();
-        post(base);
+        // Inertia automatically detects File payloads and uses multipart/form-data.
+        post(base, { forceFormData: true });
     }
 
     const inputClass =
@@ -117,6 +127,80 @@ export default function SchoolsCreate() {
                     </div>
                 </div>
 
+                {/* ── Identidade Visual ─────────────────────────────── */}
+                <div className="border-t border-gray-100 pt-8">
+                    <h2 className="text-sm font-semibold text-gray-900 mb-1">Identidade Visual</h2>
+                    <p className="text-xs text-gray-500 mb-4">
+                        Logo e cores da escola. Os alunos verão essas marcas após login.
+                    </p>
+                    <div className="space-y-5">
+                        <div>
+                            <label htmlFor="logo" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                Logo
+                                <span className="ml-2 text-xs font-normal text-gray-400">(PNG, JPG ou SVG, máx. 2MB)</span>
+                            </label>
+                            <input
+                                id="logo"
+                                type="file"
+                                accept="image/png,image/jpeg,image/svg+xml"
+                                onChange={(e) => setData('logo', e.target.files?.[0] ?? null)}
+                                className="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"
+                            />
+                            {errors.logo && <p className="mt-1.5 text-xs text-rose-600">{errors.logo}</p>}
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label htmlFor="primary_color" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Cor Primária
+                                    <span className="ml-2 text-xs font-normal text-gray-400">(botões, destaques)</span>
+                                </label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        id="primary_color"
+                                        type="color"
+                                        value={data.primary_color}
+                                        onChange={(e) => setData('primary_color', e.target.value)}
+                                        className="h-10 w-14 rounded-lg border border-gray-300 cursor-pointer"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={data.primary_color}
+                                        onChange={(e) => setData('primary_color', e.target.value)}
+                                        placeholder="#4f46e5"
+                                        className={inputClass}
+                                    />
+                                </div>
+                                {errors.primary_color && <p className="mt-1.5 text-xs text-rose-600">{errors.primary_color}</p>}
+                            </div>
+
+                            <div>
+                                <label htmlFor="secondary_color" className="block text-sm font-medium text-gray-700 mb-1.5">
+                                    Cor Secundária
+                                    <span className="ml-2 text-xs font-normal text-gray-400">(menu lateral)</span>
+                                </label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        id="secondary_color"
+                                        type="color"
+                                        value={data.secondary_color}
+                                        onChange={(e) => setData('secondary_color', e.target.value)}
+                                        className="h-10 w-14 rounded-lg border border-gray-300 cursor-pointer"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={data.secondary_color}
+                                        onChange={(e) => setData('secondary_color', e.target.value)}
+                                        placeholder="#0f172a"
+                                        className={inputClass}
+                                    />
+                                </div>
+                                {errors.secondary_color && <p className="mt-1.5 text-xs text-rose-600">{errors.secondary_color}</p>}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {/* ── Administrador da Escola ───────────────────────── */}
                 <div className="border-t border-gray-100 pt-8">
                     <h2 className="text-sm font-semibold text-gray-900 mb-1">Administrador da Escola</h2>
@@ -176,7 +260,8 @@ export default function SchoolsCreate() {
                     <button
                         type="submit"
                         disabled={processing}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium disabled:opacity-50 transition-colors"
+                        className="text-white px-6 py-2.5 rounded-xl text-sm font-medium disabled:opacity-50 transition-colors"
+                        style={{ backgroundColor: 'var(--color-primary, #4f46e5)' }}
                     >
                         {processing ? 'Criando...' : 'Criar Escola'}
                     </button>

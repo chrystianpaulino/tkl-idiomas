@@ -36,14 +36,19 @@ class ExerciseList extends Model
 {
     use BelongsToSchool, HasFactory;
 
+    /**
+     * Mass-assignment safe fields only.
+     *
+     * class_id, lesson_id, created_by and school_id are foreign keys /
+     * tenant ownership and must be set explicitly by CreateExerciseListAction.
+     * Removing them from $fillable removes the only vector through which a
+     * future ->update($validated) could re-assign an exercise list across
+     * classes or schools.
+     */
     protected $fillable = [
-        'class_id',
-        'lesson_id',
-        'created_by',
         'title',
         'description',
         'due_date',
-        'school_id',
     ];
 
     protected function casts(): array

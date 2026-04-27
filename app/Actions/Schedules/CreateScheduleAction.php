@@ -23,12 +23,17 @@ class CreateScheduleAction
      */
     public function execute(TurmaClass $turmaClass, array $data): Schedule
     {
-        return Schedule::create([
-            'class_id' => $turmaClass->id,
-            'weekday' => $data['weekday'],
-            'start_time' => $data['start_time'],
-            'duration_minutes' => $data['duration_minutes'] ?? 60,
-            'active' => true,
-        ]);
+        // class_id and school_id are intentionally outside Schedule::$fillable:
+        // they fix the parent class and tenant for the rule. This action is the
+        // only place these are set.
+        $schedule = new Schedule;
+        $schedule->class_id = $turmaClass->id;
+        $schedule->weekday = $data['weekday'];
+        $schedule->start_time = $data['start_time'];
+        $schedule->duration_minutes = $data['duration_minutes'] ?? 60;
+        $schedule->active = true;
+        $schedule->save();
+
+        return $schedule;
     }
 }

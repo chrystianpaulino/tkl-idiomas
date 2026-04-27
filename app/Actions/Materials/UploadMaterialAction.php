@@ -30,13 +30,16 @@ class UploadMaterialAction
     {
         $path = Storage::disk('public')->put('materials', $file);
 
-        $material = Material::create([
-            'class_id' => $turmaClass->id,
-            'uploaded_by' => $uploader->id,
-            'title' => $data['title'],
-            'file_path' => $path,
-            'description' => $data['description'] ?? null,
-        ]);
+        // class_id, uploaded_by and school_id are intentionally outside
+        // Material::$fillable: they fix tenant/ownership for the file. This
+        // action is the only writer that may set them.
+        $material = new Material;
+        $material->class_id = $turmaClass->id;
+        $material->uploaded_by = $uploader->id;
+        $material->title = $data['title'];
+        $material->file_path = $path;
+        $material->description = $data['description'] ?? null;
+        $material->save();
 
         $material->load('turmaClass.students');
         foreach ($material->turmaClass->students as $student) {

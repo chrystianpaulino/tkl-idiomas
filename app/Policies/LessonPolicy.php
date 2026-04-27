@@ -18,18 +18,6 @@ use App\Models\User;
 class LessonPolicy
 {
     /**
-     * Super-admins bypass all policy checks for cross-school management.
-     */
-    public function before(User $user, string $ability): ?bool
-    {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
-        return null;
-    }
-
-    /**
      * Only admins and the assigned professor of the class can register lessons.
      */
     public function create(User $user, TurmaClass $turmaClass): bool

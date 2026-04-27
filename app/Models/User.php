@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -22,17 +22,20 @@ use Illuminate\Support\Carbon;
  *
  * IMPORTANT: The 'role' column is intentionally excluded from $fillable to prevent
  * mass-assignment privilege escalation. Role assignment MUST go through direct
- * attribute setting in CreateUserAction or UserController::update.
+ * attribute setting in InviteUserAction or UserController::update.
  *
  * @property int $id
  * @property string $name
  * @property string $email
  * @property string $password
- * @property string $role One of: 'super_admin', 'school_admin', 'admin', 'professor', 'aluno'
+ * @property string $role One of: 'super_admin', 'school_admin', 'professor', 'aluno'
  * @property int|null $school_id Tenant scope; null for legacy/unscoped users
  * @property string|null $phone
  * @property Carbon|null $email_verified_at
  * @property string|null $remember_token
+ * @property string|null $invite_token SHA-256 hash of the plain token sent in the invite email; null after acceptance.
+ * @property Carbon|null $invite_sent_at When the most recent invite email was dispatched (used for 7-day expiration).
+ * @property Carbon|null $invite_accepted_at Set the moment the invitee defines their password; null while pending.
  * @property Carbon $created_at
  * @property Carbon $updated_at
  * @property-read int $remaining_lessons           Sum of remaining credits across all active packages
@@ -43,7 +46,7 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, Lesson> $lessons
  * @property-read Collection<int, Payment> $payments
  */
-class User extends Authenticatable
+class User extends Authenticatable implements MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
@@ -70,6 +73,7 @@ class User extends Authenticatable
     protected $hidden = [
         'password',
         'remember_token',
+        'invite_token',
     ];
 
     /**
@@ -81,6 +85,8 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => 'string',
+            'invite_sent_at' => 'datetime',
+            'invite_accepted_at' => 'datetime',
         ];
     }
 
@@ -103,14 +109,15 @@ class User extends Authenticatable
     }
 
     /**
-     * Whether this user has administrative privileges.
+     * Whether this user has school-level administrative privileges.
      *
-     * Returns true for both the legacy 'admin' role AND the new 'school_admin' role
-     * to maintain backward compatibility during the SaaS migration.
+     * Returns true only for 'school_admin'. The legacy 'admin' role was
+     * removed in migration 2026_04_27_143815_migrate_legacy_admin_role_to_school_admin.
+     * This helper is kept as a convenience alias for isSchoolAdmin().
      */
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['admin', 'school_admin']);
+        return $this->role === 'school_admin';
     }
 
     public function isProfessor(): bool
@@ -159,6 +166,16 @@ class User extends Authenticatable
     }
 
     /**
+     * Alias of lessonPackages() — required by Route::scopeBindings() on
+     * /admin/users/{student}/packages/{package}/payments which resolves
+     * the {package} parameter against $student->packages().
+     */
+    public function packages(): HasMany
+    {
+        return $this->lessonPackages();
+    }
+
+    /**
      * Individual lesson records for this student (both completed and scheduled).
      */
     public function lessons(): HasMany
@@ -199,5 +216,18 @@ class User extends Authenticatable
     public function needsToRenewPackage(): bool
     {
         return ! $this->lessonPackages()->active()->exists();
+    }
+
+    /**
+     * Whether the user has been invited (has a pending token) but has not yet
+     * accepted by setting their own password.
+     *
+     * NOTE: this does NOT check the 7-day expiration window. AcceptInviteController
+     * applies that gate on the link itself; an invite that "expired" without being
+     * accepted still counts as pending here so admins can reissue it.
+     */
+    public function hasPendingInvite(): bool
+    {
+        return $this->invite_token !== null && $this->invite_accepted_at === null;
     }
 }

@@ -23,13 +23,6 @@ class UserRoleHelpersTest extends TestCase
         $this->assertFalse($user->isSuperAdmin());
     }
 
-    public function test_is_super_admin_returns_false_for_admin(): void
-    {
-        $user = User::factory()->make(['role' => 'admin', 'school_id' => null]);
-
-        $this->assertFalse($user->isSuperAdmin());
-    }
-
     public function test_is_super_admin_returns_false_for_professor(): void
     {
         $user = User::factory()->make(['role' => 'professor', 'school_id' => null]);
@@ -60,13 +53,6 @@ class UserRoleHelpersTest extends TestCase
         $this->assertFalse($user->isSchoolAdmin());
     }
 
-    public function test_is_school_admin_returns_false_for_admin(): void
-    {
-        $user = User::factory()->make(['role' => 'admin', 'school_id' => null]);
-
-        $this->assertFalse($user->isSchoolAdmin());
-    }
-
     public function test_is_school_admin_returns_false_for_professor(): void
     {
         $user = User::factory()->make(['role' => 'professor', 'school_id' => null]);
@@ -81,14 +67,7 @@ class UserRoleHelpersTest extends TestCase
         $this->assertFalse($user->isSchoolAdmin());
     }
 
-    // ── isAdmin() (backward compatibility) ──────────────────────
-
-    public function test_is_admin_returns_true_for_admin_role(): void
-    {
-        $user = User::factory()->make(['role' => 'admin', 'school_id' => null]);
-
-        $this->assertTrue($user->isAdmin());
-    }
+    // ── isAdmin() — alias of isSchoolAdmin() since the legacy 'admin' role was retired ──
 
     public function test_is_admin_returns_true_for_school_admin_role(): void
     {
@@ -123,10 +102,10 @@ class UserRoleHelpersTest extends TestCase
     public function test_is_professor_still_works(): void
     {
         $professor = User::factory()->make(['role' => 'professor', 'school_id' => null]);
-        $admin = User::factory()->make(['role' => 'admin', 'school_id' => null]);
+        $schoolAdmin = User::factory()->make(['role' => 'school_admin', 'school_id' => null]);
 
         $this->assertTrue($professor->isProfessor());
-        $this->assertFalse($admin->isProfessor());
+        $this->assertFalse($schoolAdmin->isProfessor());
     }
 
     public function test_is_aluno_still_works(): void

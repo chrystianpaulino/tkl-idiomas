@@ -16,6 +16,8 @@ class LessonPackageFactory extends Factory
         return [
             'student_id' => User::factory()->state(['role' => 'aluno']),
             'total_lessons' => $this->faker->numberBetween(5, 40),
+            'price' => $this->faker->randomFloat(2, 50, 2000),
+            'currency' => 'BRL',
             'purchased_at' => now(),
             'expires_at' => $this->faker->optional()->dateTimeBetween('+1 month', '+1 year'),
             'school_id' => School::factory(),

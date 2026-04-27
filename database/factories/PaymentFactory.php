@@ -17,7 +17,7 @@ class PaymentFactory extends Factory
         return [
             'student_id' => User::factory()->state(['role' => 'aluno']),
             'lesson_package_id' => LessonPackage::factory(),
-            'registered_by' => User::factory()->admin(),
+            'registered_by' => User::factory()->schoolAdmin(),
             'amount' => $this->faker->randomFloat(2, 50, 2000),
             'currency' => 'BRL',
             'method' => $this->faker->randomElement(['pix', 'cash', 'card', 'transfer', 'other']),
@@ -44,5 +44,21 @@ class PaymentFactory extends Factory
                 'school_id' => $student->school_id,
             ];
         });
+    }
+
+    /**
+     * Bypass mass-assignment guards when seeding test data.
+     *
+     * Payment::$fillable intentionally excludes student_id, lesson_package_id,
+     * registered_by and school_id so production code cannot mass-assign
+     * ownership. Factories need to populate those fields, so we forceFill all
+     * attributes regardless of $fillable.
+     */
+    public function newModel(array $attributes = []): Payment
+    {
+        $model = new Payment;
+        $model->forceFill($attributes);
+
+        return $model;
     }
 }

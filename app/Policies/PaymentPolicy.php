@@ -17,12 +17,15 @@ use App\Models\User;
 class PaymentPolicy
 {
     /**
-     * Admins bypass all checks. For non-admins, return null to fall through
-     * to the individual ability methods (which all return false).
+     * Admins (school_admin / admin) bypass per-ability checks for payments.
+     * The super_admin bypass is handled globally by Gate::before in
+     * AppServiceProvider, so this hook only needs to grant access to
+     * school-level admins. Non-admins fall through to the individual
+     * ability methods (which all return false).
      */
     public function before(User $user, string $ability): ?bool
     {
-        if ($user->isSuperAdmin() || $user->isAdmin()) {
+        if ($user->isAdmin()) {
             return true;
         }
 

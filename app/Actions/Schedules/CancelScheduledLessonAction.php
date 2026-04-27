@@ -3,6 +3,7 @@
 namespace App\Actions\Schedules;
 
 use App\Models\ScheduledLesson;
+use App\Support\Audit;
 
 /**
  * Cancels a scheduled lesson slot before it has been confirmed.
@@ -35,6 +36,13 @@ class CancelScheduledLessonAction
         $scheduledLesson->update([
             'status' => 'cancelled',
             'cancelled_reason' => $reason,
+        ]);
+
+        Audit::log('lesson.scheduled_cancelled', [
+            'scheduled_lesson_id' => $scheduledLesson->id,
+            'class_id' => $scheduledLesson->class_id,
+            'school_id' => $scheduledLesson->school_id,
+            'reason' => $reason,
         ]);
 
         return $scheduledLesson->fresh();

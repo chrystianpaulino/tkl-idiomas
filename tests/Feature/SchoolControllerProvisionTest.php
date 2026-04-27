@@ -60,8 +60,10 @@ class SchoolControllerProvisionTest extends TestCase
             'email' => 'contato@provisioned.com',
             'admin_name' => 'Admin Provisioned',
             'admin_email' => 'admin@provisioned.com',
-            'admin_password' => 'secret1234',
-            'admin_password_confirmation' => 'secret1234',
+            // Must satisfy Password::defaults() strict rule:
+            // 12+ chars, mixed case, number, symbol.
+            'admin_password' => 'StrongPass!2026',
+            'admin_password_confirmation' => 'StrongPass!2026',
         ], $overrides);
     }
 

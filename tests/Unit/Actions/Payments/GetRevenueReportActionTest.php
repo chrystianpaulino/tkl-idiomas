@@ -59,7 +59,7 @@ class GetRevenueReportActionTest extends TestCase
         $pkg1 = LessonPackage::factory()->create(['student_id' => $student->id]);
         $pkg2 = LessonPackage::factory()->create(['student_id' => $student->id]);
 
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'school_admin']);
         Payment::factory()->create(['student_id' => $student->id, 'lesson_package_id' => $pkg1->id, 'registered_by' => $admin->id, 'amount' => 200.00, 'school_id' => $student->school_id]);
         Payment::factory()->create(['student_id' => $student->id, 'lesson_package_id' => $pkg2->id, 'registered_by' => $admin->id, 'amount' => 300.00, 'school_id' => $student->school_id]);
 
@@ -75,7 +75,7 @@ class GetRevenueReportActionTest extends TestCase
         User::factory()->create(['role' => 'aluno']);
         User::factory()->create(['role' => 'aluno']);
         User::factory()->create(['role' => 'professor']);
-        User::factory()->create(['role' => 'admin']);
+        User::factory()->create(['role' => 'school_admin']);
 
         $result = $this->action->execute();
 
@@ -87,7 +87,7 @@ class GetRevenueReportActionTest extends TestCase
     public function test_counts_paid_and_unpaid_packages(): void
     {
         $student = User::factory()->create(['role' => 'aluno']);
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'school_admin']);
 
         // Paid package
         $paidPkg = LessonPackage::factory()->create(['student_id' => $student->id]);
@@ -105,7 +105,7 @@ class GetRevenueReportActionTest extends TestCase
     public function test_unpaid_count_is_zero_when_all_packages_are_paid(): void
     {
         $student = User::factory()->create(['role' => 'aluno']);
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'school_admin']);
 
         $pkg = LessonPackage::factory()->create(['student_id' => $student->id]);
         Payment::factory()->create(['student_id' => $student->id, 'lesson_package_id' => $pkg->id, 'registered_by' => $admin->id, 'school_id' => $student->school_id]);
@@ -120,7 +120,7 @@ class GetRevenueReportActionTest extends TestCase
     public function test_by_method_groups_by_payment_method(): void
     {
         $student = User::factory()->create(['role' => 'aluno']);
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'school_admin']);
 
         $pkg1 = LessonPackage::factory()->create(['student_id' => $student->id]);
         $pkg2 = LessonPackage::factory()->create(['student_id' => $student->id]);
@@ -147,7 +147,7 @@ class GetRevenueReportActionTest extends TestCase
     public function test_recent_payments_includes_student_name(): void
     {
         $student = User::factory()->create(['role' => 'aluno', 'name' => 'João Teste']);
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'school_admin']);
 
         $pkg = LessonPackage::factory()->create(['student_id' => $student->id]);
         Payment::factory()->create(['student_id' => $student->id, 'lesson_package_id' => $pkg->id, 'registered_by' => $admin->id, 'school_id' => $student->school_id]);
@@ -161,7 +161,7 @@ class GetRevenueReportActionTest extends TestCase
     public function test_recent_payments_limited_to_10(): void
     {
         $student = User::factory()->create(['role' => 'aluno']);
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'school_admin']);
 
         for ($i = 0; $i < 15; $i++) {
             $pkg = LessonPackage::factory()->create(['student_id' => $student->id]);
@@ -181,7 +181,7 @@ class GetRevenueReportActionTest extends TestCase
     public function test_recent_payments_entry_has_expected_keys(): void
     {
         $student = User::factory()->create(['role' => 'aluno']);
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'school_admin']);
 
         $pkg = LessonPackage::factory()->create(['student_id' => $student->id]);
         Payment::factory()->create(['student_id' => $student->id, 'lesson_package_id' => $pkg->id, 'registered_by' => $admin->id, 'school_id' => $student->school_id]);
@@ -199,7 +199,7 @@ class GetRevenueReportActionTest extends TestCase
     public function test_recent_payments_are_ordered_by_most_recent_first(): void
     {
         $student = User::factory()->create(['role' => 'aluno']);
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'school_admin']);
 
         $pkgOld = LessonPackage::factory()->create(['student_id' => $student->id]);
         $pkgNew = LessonPackage::factory()->create(['student_id' => $student->id]);
@@ -235,7 +235,7 @@ class GetRevenueReportActionTest extends TestCase
         $studentA = User::factory()->create(['role' => 'aluno', 'school_id' => $schoolA->id]);
         $studentB = User::factory()->create(['role' => 'aluno', 'school_id' => $schoolB->id]);
 
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'school_admin']);
 
         $pkgA = LessonPackage::factory()->create(['student_id' => $studentA->id, 'school_id' => $schoolA->id]);
         $pkgB = LessonPackage::factory()->create(['student_id' => $studentB->id, 'school_id' => $schoolB->id]);
@@ -264,7 +264,7 @@ class GetRevenueReportActionTest extends TestCase
         $studentA = User::factory()->create(['role' => 'aluno', 'school_id' => $schoolA->id]);
         $studentB = User::factory()->create(['role' => 'aluno', 'school_id' => $schoolB->id]);
 
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'school_admin']);
 
         $pkgA = LessonPackage::factory()->create(['student_id' => $studentA->id, 'school_id' => $schoolA->id]);
         $pkgB = LessonPackage::factory()->create(['student_id' => $studentB->id, 'school_id' => $schoolB->id]);
@@ -283,7 +283,7 @@ class GetRevenueReportActionTest extends TestCase
     public function test_revenue_by_month_groups_correctly(): void
     {
         $student = User::factory()->create(['role' => 'aluno']);
-        $admin = User::factory()->create(['role' => 'admin']);
+        $admin = User::factory()->create(['role' => 'school_admin']);
 
         $pkg1 = LessonPackage::factory()->create(['student_id' => $student->id]);
         $pkg2 = LessonPackage::factory()->create(['student_id' => $student->id]);

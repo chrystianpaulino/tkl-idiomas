@@ -2,12 +2,20 @@ import AppLayout from '@/Layouts/AppLayout';
 import PageHeader from '@/Components/PageHeader';
 import { Head, useForm, Link } from '@inertiajs/react';
 
+/**
+ * Wave 9 — invite-driven user creation.
+ *
+ * The admin no longer types a password for the new user. Instead, the form
+ * collects only identity (name, email, optional phone) and role; on submit,
+ * the backend (InviteUserAction) creates the user in pending state and
+ * dispatches an invite email. The recipient defines their own password by
+ * following the link in that email.
+ */
 export default function UsersCreate() {
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',
-        password: '',
-        password_confirmation: '',
+        phone: '',
         role: 'aluno',
     });
 
@@ -19,8 +27,7 @@ export default function UsersCreate() {
     const fields = [
         { field: 'name', label: 'Nome Completo', type: 'text', placeholder: 'Ex: Maria Silva' },
         { field: 'email', label: 'Email', type: 'email', placeholder: 'email@exemplo.com' },
-        { field: 'password', label: 'Senha', type: 'password', placeholder: 'Minimo 8 caracteres' },
-        { field: 'password_confirmation', label: 'Confirmar Senha', type: 'password', placeholder: 'Repita a senha' },
+        { field: 'phone', label: 'Telefone (opcional)', type: 'text', placeholder: '(11) 91234-5678' },
     ];
 
     return (
@@ -34,6 +41,10 @@ export default function UsersCreate() {
             </PageHeader>
 
             <form onSubmit={submit} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 max-w-2xl">
+                <div className="rounded-xl bg-indigo-50 border border-indigo-100 px-4 py-3 mb-6 text-sm text-indigo-800">
+                    Um email com link de configuração de senha será enviado para o usuário. O link expira em 7 dias.
+                </div>
+
                 <div className="space-y-6">
                     {fields.map(({ field, label, type, placeholder }) => (
                         <div key={field}>
@@ -56,7 +67,7 @@ export default function UsersCreate() {
                             {[
                                 { value: 'aluno', label: 'Aluno', desc: 'Aluno matriculado' },
                                 { value: 'professor', label: 'Professor', desc: 'Ministra aulas' },
-                                { value: 'admin', label: 'Admin', desc: 'Acesso total' },
+                                { value: 'school_admin', label: 'Admin', desc: 'Acesso total' },
                             ].map((role) => (
                                 <button
                                     key={role.value}
@@ -73,6 +84,7 @@ export default function UsersCreate() {
                                 </button>
                             ))}
                         </div>
+                        {errors.role && <p className="mt-1.5 text-xs text-rose-600">{errors.role}</p>}
                     </div>
                 </div>
 
@@ -82,7 +94,7 @@ export default function UsersCreate() {
                         disabled={processing}
                         className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium disabled:opacity-50 transition-colors"
                     >
-                        {processing ? 'Criando...' : 'Criar Usuario'}
+                        {processing ? 'Enviando convite...' : 'Enviar convite'}
                     </button>
                     <Link href="/admin/users" className="text-sm text-gray-500 hover:text-gray-700 transition-colors">
                         Cancelar

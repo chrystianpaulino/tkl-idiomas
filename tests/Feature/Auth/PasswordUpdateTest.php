@@ -15,20 +15,24 @@ class PasswordUpdateTest extends TestCase
     {
         $user = User::factory()->create();
 
+        // New password must satisfy Password::defaults() strict rule:
+        // 12+ chars, mixed case, number, symbol.
+        $newPassword = 'StrongPass!2026';
+
         $response = $this
             ->actingAs($user)
             ->from('/profile')
             ->put('/password', [
                 'current_password' => 'password',
-                'password' => 'new-password',
-                'password_confirmation' => 'new-password',
+                'password' => $newPassword,
+                'password_confirmation' => $newPassword,
             ]);
 
         $response
             ->assertSessionHasNoErrors()
             ->assertRedirect('/profile');
 
-        $this->assertTrue(Hash::check('new-password', $user->refresh()->password));
+        $this->assertTrue(Hash::check($newPassword, $user->refresh()->password));
     }
 
     public function test_correct_password_must_be_provided_to_update_password(): void

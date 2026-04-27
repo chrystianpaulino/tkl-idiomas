@@ -87,13 +87,13 @@ class UserTest extends TestCase
 
     public function test_role_helpers_return_correct_boolean(): void
     {
-        $admin = User::factory()->admin()->make();
+        $schoolAdmin = User::factory()->schoolAdmin()->make();
         $professor = User::factory()->professor()->make();
         $aluno = User::factory()->make(['role' => 'aluno']);
 
-        $this->assertTrue($admin->isAdmin());
-        $this->assertFalse($admin->isProfessor());
-        $this->assertFalse($admin->isAluno());
+        $this->assertTrue($schoolAdmin->isAdmin());
+        $this->assertFalse($schoolAdmin->isProfessor());
+        $this->assertFalse($schoolAdmin->isAluno());
 
         $this->assertTrue($professor->isProfessor());
         $this->assertFalse($professor->isAdmin());

@@ -52,7 +52,7 @@ function getFileIcon(fileName) {
 
 export default function MaterialsIndex({ turmaClass, materials }) {
     const { auth } = usePage().props;
-    const canManage = auth?.user?.role === 'admin' || auth?.user?.role === 'professor';
+    const canManage = auth?.user?.role === 'school_admin' || auth?.user?.role === 'professor';
     const list = materials ?? [];
 
     return (

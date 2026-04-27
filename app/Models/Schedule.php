@@ -33,13 +33,21 @@ class Schedule extends Model
 {
     use BelongsToSchool, HasFactory;
 
+    /**
+     * Mass-assignment safe fields only.
+     *
+     * class_id and school_id are foreign keys / tenant ownership and must be
+     * set explicitly by Action classes (CreateScheduleAction). Removing them
+     * from $fillable prevents a future ->update($validated) from re-parenting
+     * a schedule across classes or schools. Note: UpdateScheduleAction
+     * historically allowed changing class_id; it now uses forceFill internally
+     * to keep that capability while keeping the safe default for callers.
+     */
     protected $fillable = [
-        'class_id',
         'weekday',
         'start_time',
         'duration_minutes',
         'active',
-        'school_id',
     ];
 
     protected function casts(): array

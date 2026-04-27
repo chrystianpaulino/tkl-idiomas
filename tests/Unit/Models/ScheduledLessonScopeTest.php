@@ -36,12 +36,15 @@ class ScheduledLessonScopeTest extends TestCase
             'role' => 'professor',
             'school_id' => $school->id,
         ]);
-        $class = TurmaClass::withoutGlobalScope(SchoolScope::class)->create([
+        // forceCreate bypasses the mass-assignment guard on tenant/ownership
+        // foreign keys (school_id, class_id, professor_id) which production
+        // code intentionally requires Action classes to set explicitly.
+        $class = TurmaClass::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'name' => 'Class '.$school->name,
             'professor_id' => $professor->id,
             'school_id' => $school->id,
         ]);
-        $schedule = Schedule::withoutGlobalScope(SchoolScope::class)->create([
+        $schedule = Schedule::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $class->id,
             'weekday' => 1,
             'start_time' => '14:00',
@@ -61,12 +64,16 @@ class ScheduledLessonScopeTest extends TestCase
 
         app()->instance('tenant.school_id', $data['school']->id);
 
-        $scheduledLesson = ScheduledLesson::create([
+        // forceFill applies foreign keys outside $fillable; the BelongsToSchool
+        // creating event still auto-assigns school_id from tenant context.
+        $scheduledLesson = new ScheduledLesson;
+        $scheduledLesson->forceFill([
             'schedule_id' => $data['schedule']->id,
             'class_id' => $data['class']->id,
             'scheduled_at' => now()->addDays(1),
             'status' => 'scheduled',
         ]);
+        $scheduledLesson->save();
 
         $this->assertSame($data['school']->id, $scheduledLesson->school_id);
     }
@@ -78,14 +85,14 @@ class ScheduledLessonScopeTest extends TestCase
         $dataA = $this->createSchoolWithClassAndSchedule();
         $dataB = $this->createSchoolWithClassAndSchedule();
 
-        ScheduledLesson::withoutGlobalScope(SchoolScope::class)->create([
+        ScheduledLesson::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'schedule_id' => $dataA['schedule']->id,
             'class_id' => $dataA['class']->id,
             'scheduled_at' => now()->addDays(1),
             'status' => 'scheduled',
             'school_id' => $dataA['school']->id,
         ]);
-        ScheduledLesson::withoutGlobalScope(SchoolScope::class)->create([
+        ScheduledLesson::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'schedule_id' => $dataB['schedule']->id,
             'class_id' => $dataB['class']->id,
             'scheduled_at' => now()->addDays(2),
@@ -108,7 +115,7 @@ class ScheduledLessonScopeTest extends TestCase
         $dataA = $this->createSchoolWithClassAndSchedule();
         $dataB = $this->createSchoolWithClassAndSchedule();
 
-        ScheduledLesson::withoutGlobalScope(SchoolScope::class)->create([
+        ScheduledLesson::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'schedule_id' => $dataB['schedule']->id,
             'class_id' => $dataB['class']->id,
             'scheduled_at' => now()->addDays(1),
@@ -129,14 +136,14 @@ class ScheduledLessonScopeTest extends TestCase
         $dataA = $this->createSchoolWithClassAndSchedule();
         $dataB = $this->createSchoolWithClassAndSchedule();
 
-        ScheduledLesson::withoutGlobalScope(SchoolScope::class)->create([
+        ScheduledLesson::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'schedule_id' => $dataA['schedule']->id,
             'class_id' => $dataA['class']->id,
             'scheduled_at' => now()->addDays(1),
             'status' => 'scheduled',
             'school_id' => $dataA['school']->id,
         ]);
-        ScheduledLesson::withoutGlobalScope(SchoolScope::class)->create([
+        ScheduledLesson::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'schedule_id' => $dataB['schedule']->id,
             'class_id' => $dataB['class']->id,
             'scheduled_at' => now()->addDays(2),
@@ -159,7 +166,7 @@ class ScheduledLessonScopeTest extends TestCase
         // Bind tenant A, but explicitly set school B
         app()->instance('tenant.school_id', $dataA['school']->id);
 
-        $lesson = ScheduledLesson::withoutGlobalScope(SchoolScope::class)->create([
+        $lesson = ScheduledLesson::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'schedule_id' => $dataB['schedule']->id,
             'class_id' => $dataB['class']->id,
             'scheduled_at' => now()->addDays(1),
@@ -175,7 +182,7 @@ class ScheduledLessonScopeTest extends TestCase
         $data = $this->createSchoolWithClassAndSchedule();
 
         // No tenant context, no explicit school_id — should remain null
-        $lesson = ScheduledLesson::withoutGlobalScope(SchoolScope::class)->create([
+        $lesson = ScheduledLesson::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'schedule_id' => $data['schedule']->id,
             'class_id' => $data['class']->id,
             'scheduled_at' => now()->addDays(1),

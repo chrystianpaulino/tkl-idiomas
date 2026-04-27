@@ -21,9 +21,20 @@ class StoreExerciseSubmissionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'answers' => ['required', 'array'],
+            // max:200 caps the number of answers a single submission can carry.
+            // Without it, a malicious aluno could POST a payload with millions
+            // of entries and force the server into expensive validation +
+            // file-system work (DoS).
+            'answers' => ['required', 'array', 'max:200'],
             'answers.*.answer_text' => ['nullable', 'string', 'max:5000'],
             'answers.*.file' => ['nullable', 'file', 'mimes:pdf,doc,docx,jpg,png', 'max:10240'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'answers.max' => 'Uma submissão não pode conter mais de 200 respostas.',
         ];
     }
 }

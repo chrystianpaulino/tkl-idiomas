@@ -29,7 +29,7 @@ function TrashIcon({ className }) {
 
 export default function LessonsIndex({ turmaClass, lessons }) {
     const { auth } = usePage().props;
-    const canManage = auth?.user?.role === 'admin' || auth?.user?.role === 'professor';
+    const canManage = auth?.user?.role === 'school_admin' || auth?.user?.role === 'professor';
     const list = lessons?.data ?? lessons ?? [];
 
     return (

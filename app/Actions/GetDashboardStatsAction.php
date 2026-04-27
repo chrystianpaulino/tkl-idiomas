@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Models\Lesson;
 use App\Models\LessonPackage;
 use App\Models\Payment;
+use App\Models\ScheduledLesson;
 use App\Models\School;
 use App\Models\TurmaClass;
 use App\Models\User;
@@ -31,7 +32,7 @@ class GetDashboardStatsAction
     {
         return match ($user->role) {
             'super_admin' => $this->superAdminStats($user),
-            'school_admin', 'admin' => $this->adminStats($user),
+            'school_admin' => $this->adminStats($user),
             'professor' => $this->professorStats($user),
             'aluno' => $this->alunoStats($user),
             default => [],
@@ -133,9 +134,25 @@ class GetDashboardStatsAction
             })
             ->toArray();
 
+        $weekSchedule = ScheduledLesson::query()
+            ->whereHas('turmaClass', fn ($q) => $q->where('professor_id', $user->id))
+            ->where('status', 'scheduled')
+            ->whereBetween('scheduled_at', [now(), now()->addDays(7)])
+            ->with(['turmaClass:id,name', 'schedule:id,duration_minutes'])
+            ->orderBy('scheduled_at')
+            ->limit(10)
+            ->get()
+            ->map(fn (ScheduledLesson $sl) => [
+                'id' => $sl->id,
+                'scheduled_at' => $sl->scheduled_at?->toIso8601String(),
+                'class_name' => $sl->turmaClass?->name,
+                'duration_minutes' => $sl->schedule?->duration_minutes,
+            ]);
+
         return [
             'total_classes' => $user->taughtClasses()->count(),
             'total_lessons_taught' => Lesson::where('professor_id', $user->id)->count(),
+            'week_schedule' => $weekSchedule,
             'recent_lessons' => Lesson::where('professor_id', $user->id)
                 ->with(['student:id,name', 'turmaClass:id,name'])
                 ->latest('conducted_at')
@@ -200,6 +217,22 @@ class GetDashboardStatsAction
                 'professor' => $class->professor?->name ?? 'N/A',
             ]);
 
+        $nextLesson = ScheduledLesson::query()
+            ->whereHas('turmaClass.students', fn ($q) => $q->where('users.id', $user->id))
+            ->where('status', 'scheduled')
+            ->where('scheduled_at', '>', now())
+            ->with(['turmaClass.professor:id,name', 'schedule:id,duration_minutes'])
+            ->orderBy('scheduled_at')
+            ->first();
+
+        $nextLessonPayload = $nextLesson === null ? null : [
+            'id' => $nextLesson->id,
+            'scheduled_at' => $nextLesson->scheduled_at?->toIso8601String(),
+            'class_name' => $nextLesson->turmaClass?->name,
+            'professor' => $nextLesson->turmaClass?->professor?->name,
+            'duration_minutes' => $nextLesson->schedule?->duration_minutes,
+        ];
+
         // Compute warning level
         $warning = null;
         if ($activePackage) {
@@ -214,6 +247,7 @@ class GetDashboardStatsAction
         }
 
         return [
+            'next_lesson' => $nextLessonPayload,
             'activePackage' => $activePackage ? [
                 'id' => $activePackage->id,
                 'total_lessons' => $activePackage->total_lessons,

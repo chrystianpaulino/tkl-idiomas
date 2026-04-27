@@ -5,6 +5,7 @@ namespace App\Actions\Payments;
 use App\Models\LessonPackage;
 use App\Models\Payment;
 use App\Models\User;
+use App\Support\Audit;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 /**
@@ -39,16 +40,33 @@ class RegisterPaymentAction
             throw new \InvalidArgumentException('Payment amount must be greater than zero.');
         }
 
-        return Payment::create([
+        // Foreign keys (student_id, lesson_package_id, registered_by) and
+        // school_id are intentionally outside Payment::$fillable so they can
+        // never be reassigned via mass-assignment. This action is the only
+        // writer that may set them.
+        $payment = new Payment;
+        $payment->student_id = $student->id;
+        $payment->lesson_package_id = $package->id;
+        $payment->registered_by = $registeredBy;
+        $payment->school_id = $package->school_id;
+        $payment->amount = $data['amount'];
+        $payment->currency = $data['currency'] ?? 'BRL';
+        $payment->method = $data['method'] ?? 'pix';
+        $payment->paid_at = $data['paid_at'];
+        $payment->notes = $data['notes'] ?? null;
+        $payment->save();
+
+        Audit::log('payment.registered', [
+            'payment_id' => $payment->id,
             'student_id' => $student->id,
-            'lesson_package_id' => $package->id,
+            'package_id' => $package->id,
+            'school_id' => $payment->school_id,
             'registered_by' => $registeredBy,
-            'amount' => $data['amount'],
-            'currency' => $data['currency'] ?? 'BRL',
-            'method' => $data['method'] ?? 'pix',
-            'paid_at' => $data['paid_at'],
-            'notes' => $data['notes'] ?? null,
-            'school_id' => $package->school_id,
+            'amount' => (string) $payment->amount,
+            'currency' => $payment->currency,
+            'method' => $payment->method,
         ]);
+
+        return $payment;
     }
 }

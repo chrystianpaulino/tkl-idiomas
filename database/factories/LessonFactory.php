@@ -32,4 +32,20 @@ class LessonFactory extends Factory
             'conducted_at' => now(),
         ];
     }
+
+    /**
+     * Bypass mass-assignment guards when seeding test data.
+     *
+     * Lesson::$fillable intentionally excludes foreign keys and school_id so
+     * production code cannot mass-assign ownership. Factories (test-only) need
+     * to populate those fields, so we override newModel to forceFill all
+     * attributes regardless of $fillable.
+     */
+    public function newModel(array $attributes = []): Lesson
+    {
+        $model = new Lesson;
+        $model->forceFill($attributes);
+
+        return $model;
+    }
 }

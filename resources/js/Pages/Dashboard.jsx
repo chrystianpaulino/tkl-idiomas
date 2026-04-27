@@ -214,6 +214,8 @@ function AdminDashboard({ stats }) {
 
 /* ─── Professor Dashboard ─── */
 function ProfessorDashboard({ stats }) {
+    const week = stats?.week_schedule ?? [];
+
     return (
         <div className="space-y-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -238,6 +240,46 @@ function ProfessorDashboard({ stats }) {
                     iconBg="bg-emerald-50"
                     iconColor="text-emerald-600"
                 />
+            </div>
+
+            {/* Agenda da semana */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+                <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900">Agenda da semana</h3>
+                    <Link href="/scheduled-lessons" className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+                        Ver todos
+                    </Link>
+                </div>
+                {week.length === 0 ? (
+                    <p className="px-6 py-8 text-sm text-gray-500 text-center">
+                        Nenhuma aula agendada para os proximos 7 dias.
+                    </p>
+                ) : (
+                    <ul className="divide-y divide-gray-100">
+                        {week.map((sl) => {
+                            const d = sl.scheduled_at ? new Date(sl.scheduled_at) : null;
+                            return (
+                                <li key={sl.id} className="px-6 py-4 flex items-center gap-4">
+                                    <div className="w-12 h-12 rounded-xl bg-sky-50 text-sky-700 flex flex-col items-center justify-center flex-shrink-0">
+                                        <span className="text-[10px] uppercase">
+                                            {d ? d.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '') : ''}
+                                        </span>
+                                        <span className="text-xs font-bold leading-none">
+                                            {d ? d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) : '\u2014'}
+                                        </span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-900 truncate">{sl.class_name ?? '\u2014'}</p>
+                                        <p className="text-xs text-gray-500 mt-0.5">
+                                            {d ? d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '\u2014'}
+                                            {sl.duration_minutes && (<> &middot; {sl.duration_minutes} min</>)}
+                                        </p>
+                                    </div>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -433,6 +475,50 @@ function ProgressCard({ progress }) {
 }
 
 /* ─── Aluno Dashboard ─── */
+function NextLessonCard({ nextLesson }) {
+    if (!nextLesson) {
+        return (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+                <h3 className="text-sm font-semibold text-gray-900 mb-2">Proxima aula</h3>
+                <p className="text-sm text-gray-500">
+                    Nenhuma aula agendada no momento. Fale com seu professor para definir a agenda.
+                </p>
+            </div>
+        );
+    }
+
+    const d = nextLesson.scheduled_at ? new Date(nextLesson.scheduled_at) : null;
+    const dateStr = d ? d.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }) : '—';
+    const timeStr = d ? d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+
+    return (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div className="flex items-start justify-between mb-4">
+                <h3 className="text-sm font-semibold text-gray-900">Proxima aula</h3>
+                <Link href="/scheduled-lessons" className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+                    Ver agenda
+                </Link>
+            </div>
+            <div className="flex items-start gap-4">
+                <div className="w-14 h-14 rounded-xl bg-indigo-50 text-indigo-700 flex flex-col items-center justify-center flex-shrink-0">
+                    <CalendarIcon className="w-5 h-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900 capitalize">{dateStr}</p>
+                    <p className="text-sm text-gray-700 mt-0.5">
+                        {timeStr}
+                        {nextLesson.duration_minutes && (<> &middot; {nextLesson.duration_minutes} min</>)}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                        {nextLesson.class_name ?? '—'}
+                        {nextLesson.professor && (<> &middot; Prof. {nextLesson.professor}</>)}
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 function AlunoDashboard({ stats }) {
     const pkg = stats?.activePackage;
     const warning = stats?.warning;
@@ -442,6 +528,9 @@ function AlunoDashboard({ stats }) {
         <div className="space-y-8">
             {/* Warning Banner */}
             <WarningBanner warning={warning} />
+
+            {/* Proxima aula */}
+            <NextLessonCard nextLesson={stats?.next_lesson} />
 
             {/* Stats Row */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -489,7 +578,7 @@ function AlunoDashboard({ stats }) {
                         {pkg.price != null && (
                             <span className="flex items-center gap-1.5">
                                 <CurrencyIcon className="w-4 h-4 text-gray-400" />
-                                Pacote: R$ {Number(pkg.price).toFixed(2).replace('.', ',')} ({pkg.total_lessons} aulas)
+                                Pacote: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: pkg.currency ?? 'BRL' }).format(Number(pkg.price))} ({pkg.total_lessons} aulas)
                             </span>
                         )}
                         {pkg.expires_at && (
@@ -606,12 +695,11 @@ export default function Dashboard({ stats }) {
 
     const subtitles = {
         school_admin: 'Visao geral da escola',
-        admin: 'Visao geral do sistema',
         professor: 'Aqui esta o resumo das suas atividades',
         aluno: 'Aqui esta o resumo do seu aprendizado',
     };
 
-    const isAdmin = role === 'admin' || role === 'school_admin';
+    const isAdmin = role === 'school_admin';
 
     return (
         <AppLayout title="Dashboard">

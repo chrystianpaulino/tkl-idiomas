@@ -102,19 +102,6 @@ class TenantMiddlewareIntegrationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_old_admin_role_can_still_access_admin_panel(): void
-    {
-        $school = School::factory()->create();
-        $oldAdmin = User::factory()->create([
-            'role' => 'admin',
-            'school_id' => $school->id,
-        ]);
-
-        $response = $this->actingAs($oldAdmin)->get('/admin/users');
-
-        $response->assertStatus(200);
-    }
-
     // ── Unauthenticated access ───────────────────────────────────────
 
     public function test_unauthenticated_user_is_redirected_to_login(): void

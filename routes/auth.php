@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AcceptInviteController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
@@ -7,16 +8,20 @@ use App\Http\Controllers\Auth\EmailVerificationPromptController;
 use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
-use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
+// Public self-registration is INTENTIONALLY DISABLED. In a multi-tenant SaaS, user
+// accounts must always belong to a school and have a role assigned -- both are
+// excluded from User::$fillable to prevent privilege escalation. New users are
+// created exclusively via:
+//   - school_admin → POST /admin/users (CreateUserAction)
+//   - super_admin  → ProvisionSchoolAction (creates School + first school_admin)
+//
+// Removing the register routes also closes the gap that allowed anonymous users
+// to bypass the `verified` middleware (User does not implement MustVerifyEmail),
+// which could create accounts in a permissions limbo.
 Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
-        ->name('register');
-
-    Route::post('register', [RegisteredUserController::class, 'store']);
-
     Route::get('login', [AuthenticatedSessionController::class, 'create'])
         ->name('login');
 
@@ -33,6 +38,15 @@ Route::middleware('guest')->group(function () {
 
     Route::post('reset-password', [NewPasswordController::class, 'store'])
         ->name('password.store');
+
+    // Wave 9 invite flow: anonymous endpoints because the bearer of a valid
+    // token IS authenticated as the target user for password setup.
+    // AcceptInviteController re-checks the token on every request.
+    Route::get('invite/{token}', [AcceptInviteController::class, 'show'])
+        ->name('invite.accept');
+
+    Route::post('invite/{token}', [AcceptInviteController::class, 'accept'])
+        ->name('invite.store');
 });
 
 Route::middleware('auth')->group(function () {

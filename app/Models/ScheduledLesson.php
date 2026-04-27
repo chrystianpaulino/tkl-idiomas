@@ -38,14 +38,19 @@ class ScheduledLesson extends Model
 {
     use BelongsToSchool, HasFactory;
 
+    /**
+     * Mass-assignment safe fields only.
+     *
+     * schedule_id, class_id, lesson_id and school_id are foreign keys /
+     * tenant ownership and must be set explicitly by Action classes
+     * (GenerateScheduledLessonsAction, ConfirmScheduledLessonAction). Removing
+     * them from $fillable prevents a future ->update($validated) from
+     * re-parenting a slot into another schedule, class, or school.
+     */
     protected $fillable = [
-        'schedule_id',
-        'class_id',
         'scheduled_at',
         'status',
         'cancelled_reason',
-        'lesson_id',
-        'school_id',
     ];
 
     protected function casts(): array

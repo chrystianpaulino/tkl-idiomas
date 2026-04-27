@@ -21,6 +21,9 @@ use Illuminate\Support\Facades\Storage;
  * @property string $name Display name of the school
  * @property string $slug URL-safe identifier, unique across the platform
  * @property string|null $email Contact email for the school administration
+ * @property string|null $logo_url Relative storage path to the school's logo (disk: public)
+ * @property string $primary_color Hex color (#RRGGBB) used as the school's accent / primary
+ * @property string $secondary_color Hex color (#RRGGBB) used as the school's sidebar / secondary
  * @property bool $active Whether the school is currently active on the platform
  * @property Carbon $created_at
  * @property Carbon $updated_at
@@ -34,6 +37,9 @@ class School extends Model
         'name',
         'slug',
         'email',
+        'logo_url',
+        'primary_color',
+        'secondary_color',
         'active',
     ];
 

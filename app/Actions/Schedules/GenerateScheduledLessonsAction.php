@@ -50,19 +50,25 @@ class GenerateScheduledLessonsAction
 
             // Only create future slots
             if ($scheduledAt->gt($now)) {
-                [$scheduledLesson, $wasCreated] = ScheduledLesson::firstOrCreate(
-                    [
-                        'schedule_id' => $schedule->id,
-                        'class_id' => $schedule->class_id,
-                        'scheduled_at' => $scheduledAt->toDateTimeString(),
-                    ],
-                    [
-                        'status' => 'scheduled',
-                        'school_id' => $schedule->school_id,
-                    ]
-                );
+                $existing = ScheduledLesson::where('schedule_id', $schedule->id)
+                    ->where('class_id', $schedule->class_id)
+                    ->where('scheduled_at', $scheduledAt->toDateTimeString())
+                    ->first();
 
-                if ($wasCreated) {
+                if ($existing === null) {
+                    // schedule_id, class_id and school_id are intentionally
+                    // outside ScheduledLesson::$fillable; we set them via
+                    // direct assignment so this action remains the canonical
+                    // writer that wires the slot to its parent schedule and
+                    // tenant.
+                    $scheduledLesson = new ScheduledLesson;
+                    $scheduledLesson->schedule_id = $schedule->id;
+                    $scheduledLesson->class_id = $schedule->class_id;
+                    $scheduledLesson->school_id = $schedule->school_id;
+                    $scheduledLesson->scheduled_at = $scheduledAt->toDateTimeString();
+                    $scheduledLesson->status = 'scheduled';
+                    $scheduledLesson->save();
+
                     $created->push($scheduledLesson);
                 }
             }

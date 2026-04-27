@@ -12,7 +12,7 @@ use Tests\TestCase;
  * Fuzz tests for GetDashboardStatsAction::adminStats() edge cases.
  *
  * Probes: school_id=0 handling, cross-school stat isolation,
- * zero-student school, and legacy 'admin' role scoping.
+ * zero-student school, and unknown role handling.
  *
  * Covers TKL-003.
  */
@@ -156,46 +156,6 @@ class GetDashboardStatsActionFuzzTest extends TestCase
         $this->assertArrayHasKey('payment_summary', $stats);
         $this->assertSame(0.0, $stats['payment_summary']['total_revenue']);
         $this->assertSame(0, $stats['payment_summary']['unpaid_count']);
-    }
-
-    // ── Legacy 'admin' role scoping ────────────────────────────────
-
-    public function test_legacy_admin_role_with_school_id_is_scoped_to_own_school(): void
-    {
-        $schoolA = $this->createSchoolWithUsers(students: 4, professors: 2);
-        $schoolB = $this->createSchoolWithUsers(students: 6, professors: 3);
-
-        // Create a user with the legacy 'admin' role.
-        $legacyAdmin = $this->createUser('admin', $schoolA['school']->id);
-
-        $stats = $this->action->execute($legacyAdmin);
-
-        // adminStats() is invoked for 'admin' role (match case in execute()).
-        $this->assertSame(4, $stats['total_students']);
-        $this->assertSame(2, $stats['total_professors']);
-
-        // Verify the key set is the same as school_admin (not super_admin shape).
-        $this->assertArrayHasKey('total_classes', $stats);
-        $this->assertArrayHasKey('payment_summary', $stats);
-        $this->assertArrayNotHasKey('total_schools', $stats);
-        $this->assertArrayNotHasKey('active_schools', $stats);
-    }
-
-    // ── Legacy 'admin' role with null school_id sees all (like super_admin scoping) ─
-
-    public function test_legacy_admin_role_with_null_school_id_sees_all_users(): void
-    {
-        $this->createSchoolWithUsers(students: 3, professors: 1);
-        $this->createSchoolWithUsers(students: 5, professors: 2);
-
-        // Legacy admin with null school_id -- the when() clause skips the filter.
-        $legacyAdmin = $this->createUser('admin', null);
-
-        $stats = $this->action->execute($legacyAdmin);
-
-        // $schoolId = null → when(null !== null) = when(false) → no filter → sees all.
-        $this->assertSame(8, $stats['total_students']);
-        $this->assertSame(3, $stats['total_professors']);
     }
 
     // ── Unknown role returns empty array ───────────────────────────

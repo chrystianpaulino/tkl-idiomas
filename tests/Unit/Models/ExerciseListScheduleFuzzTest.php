@@ -64,7 +64,7 @@ class ExerciseListScheduleFuzzTest extends TestCase
 
         $this->expectException(QueryException::class);
 
-        ExerciseList::withoutGlobalScope(SchoolScope::class)->create([
+        ExerciseList::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $data['class']->id,
             'created_by' => $data['professor']->id,
             'title' => 'Zero Tenant Test',
@@ -80,7 +80,7 @@ class ExerciseListScheduleFuzzTest extends TestCase
 
         $this->expectException(QueryException::class);
 
-        Schedule::withoutGlobalScope(SchoolScope::class)->create([
+        Schedule::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $data['class']->id,
             'weekday' => 1,
             'start_time' => '10:00',
@@ -99,7 +99,7 @@ class ExerciseListScheduleFuzzTest extends TestCase
         // Bind tenant A, but explicitly set school_id to B.
         app()->instance('tenant.school_id', $dataA['school']->id);
 
-        $list = ExerciseList::withoutGlobalScope(SchoolScope::class)->create([
+        $list = ExerciseList::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $dataB['class']->id,
             'created_by' => $dataB['professor']->id,
             'title' => 'Explicit B in Tenant A',
@@ -121,13 +121,13 @@ class ExerciseListScheduleFuzzTest extends TestCase
         $dataB = $this->createSchoolWithClass('School B');
 
         // Create lists in each school.
-        ExerciseList::withoutGlobalScope(SchoolScope::class)->create([
+        ExerciseList::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $dataA['class']->id,
             'created_by' => $dataA['professor']->id,
             'title' => 'List from A',
             'school_id' => $dataA['school']->id,
         ]);
-        ExerciseList::withoutGlobalScope(SchoolScope::class)->create([
+        ExerciseList::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $dataB['class']->id,
             'created_by' => $dataB['professor']->id,
             'title' => 'List from B',
@@ -154,7 +154,7 @@ class ExerciseListScheduleFuzzTest extends TestCase
         $dataA = $this->createSchoolWithClass('School A');
         $dataB = $this->createSchoolWithClass('School B');
 
-        Schedule::withoutGlobalScope(SchoolScope::class)->create([
+        Schedule::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $dataA['class']->id,
             'weekday' => 1,
             'start_time' => '09:00',
@@ -162,7 +162,7 @@ class ExerciseListScheduleFuzzTest extends TestCase
             'active' => true,
             'school_id' => $dataA['school']->id,
         ]);
-        Schedule::withoutGlobalScope(SchoolScope::class)->create([
+        Schedule::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $dataB['class']->id,
             'weekday' => 3,
             'start_time' => '14:00',
@@ -191,14 +191,14 @@ class ExerciseListScheduleFuzzTest extends TestCase
         $data = $this->createSchoolWithClass();
 
         // Create an ExerciseList with null school_id (no tenant, no explicit).
-        $orphanList = ExerciseList::withoutGlobalScope(SchoolScope::class)->create([
+        $orphanList = ExerciseList::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $data['class']->id,
             'created_by' => $data['professor']->id,
             'title' => 'Orphan (null school_id)',
         ]);
 
         // Also create one with a real school_id.
-        ExerciseList::withoutGlobalScope(SchoolScope::class)->create([
+        ExerciseList::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $data['class']->id,
             'created_by' => $data['professor']->id,
             'title' => 'Owned by School',
@@ -223,14 +223,14 @@ class ExerciseListScheduleFuzzTest extends TestCase
         $data = $this->createSchoolWithClass();
 
         // Orphan list (null school_id).
-        ExerciseList::withoutGlobalScope(SchoolScope::class)->create([
+        ExerciseList::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $data['class']->id,
             'created_by' => $data['professor']->id,
             'title' => 'Orphan List',
         ]);
 
         // Owned list.
-        ExerciseList::withoutGlobalScope(SchoolScope::class)->create([
+        ExerciseList::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $data['class']->id,
             'created_by' => $data['professor']->id,
             'title' => 'Owned List',
@@ -257,7 +257,7 @@ class ExerciseListScheduleFuzzTest extends TestCase
         // This is the database-level defense against invalid tenant references.
         $this->expectException(QueryException::class);
 
-        ExerciseList::withoutGlobalScope(SchoolScope::class)->create([
+        ExerciseList::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $data['class']->id,
             'created_by' => $data['professor']->id,
             'title' => 'Zero School ID',
@@ -272,7 +272,7 @@ class ExerciseListScheduleFuzzTest extends TestCase
         $data = $this->createSchoolWithClass();
 
         // Orphan schedule (null school_id).
-        Schedule::withoutGlobalScope(SchoolScope::class)->create([
+        Schedule::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $data['class']->id,
             'weekday' => 5,
             'start_time' => '16:00',
@@ -281,7 +281,7 @@ class ExerciseListScheduleFuzzTest extends TestCase
         ]);
 
         // Owned schedule.
-        Schedule::withoutGlobalScope(SchoolScope::class)->create([
+        Schedule::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $data['class']->id,
             'weekday' => 2,
             'start_time' => '08:00',

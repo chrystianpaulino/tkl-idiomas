@@ -61,15 +61,21 @@ class RegisterLessonAction
             $package->increment('used_lessons');
             $package->refresh(); // reload to get updated used_lessons
 
-            return Lesson::create([
-                'class_id' => $turmaClass->id,
-                'student_id' => $student->id,
-                'professor_id' => $professor->id,
-                'package_id' => $package->id,
-                'title' => $data['title'],
-                'notes' => $data['notes'] ?? null,
-                'conducted_at' => $data['conducted_at'] ?? now(),
-            ]);
+            // Foreign keys (class_id, student_id, professor_id, package_id) and
+            // school_id are intentionally outside Lesson::$fillable so they can
+            // never be reassigned via mass-assignment. We set them explicitly
+            // here -- this is one of the only writers that may.
+            $lesson = new Lesson;
+            $lesson->class_id = $turmaClass->id;
+            $lesson->student_id = $student->id;
+            $lesson->professor_id = $professor->id;
+            $lesson->package_id = $package->id;
+            $lesson->title = $data['title'];
+            $lesson->notes = $data['notes'] ?? null;
+            $lesson->conducted_at = $data['conducted_at'] ?? now();
+            $lesson->save();
+
+            return $lesson;
         });
 
         // M4: Dispatch notifications AFTER transaction commits to avoid false alarms on rollback

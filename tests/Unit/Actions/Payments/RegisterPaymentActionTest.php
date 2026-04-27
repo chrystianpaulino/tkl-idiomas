@@ -22,7 +22,7 @@ class RegisterPaymentActionTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->admin = User::factory()->admin()->create();
+        $this->admin = User::factory()->schoolAdmin()->create();
         $this->actingAs($this->admin);
         $this->action = new RegisterPaymentAction;
     }

@@ -165,28 +165,6 @@ class GetDashboardStatsActionTest extends TestCase
         $this->assertArrayHasKey('payment_summary', $stats);
     }
 
-    public function test_admin_stats_with_legacy_admin_role_also_scoped(): void
-    {
-        $schoolA = $this->createSchoolWithUsers(students: 4, professors: 2);
-        $schoolB = $this->createSchoolWithUsers(students: 6, professors: 3);
-
-        // Create a user with legacy 'admin' role
-        $legacyAdmin = new User;
-        $legacyAdmin->name = 'Legacy Admin';
-        $legacyAdmin->email = 'legacy@test.com';
-        $legacyAdmin->password = bcrypt('password');
-        $legacyAdmin->role = 'admin';
-        $legacyAdmin->school_id = $schoolA['school']->id;
-        $legacyAdmin->email_verified_at = now();
-        $legacyAdmin->save();
-
-        $stats = $this->action->execute($legacyAdmin);
-
-        // Legacy admin with school_id should see only school A's users
-        $this->assertSame(4, $stats['total_students']);
-        $this->assertSame(2, $stats['total_professors']);
-    }
-
     public function test_super_admin_stats_has_correct_shape(): void
     {
         $this->createSchoolWithUsers(students: 1, professors: 1);

@@ -21,6 +21,14 @@ class EnrollmentController extends Controller
     public function store(EnrollStudentRequest $request, TurmaClass $class, EnrollStudentAction $action): RedirectResponse
     {
         $student = User::findOrFail($request->validated('student_id'));
+
+        // Defense-in-depth: guard against cross-tenant enrollment. The
+        // FormRequest already filters by school_id at validation, but the
+        // User model is not BelongsToSchool scoped, so we re-check here.
+        if (! auth()->user()->isSuperAdmin() && $student->school_id !== auth()->user()->school_id) {
+            abort(403);
+        }
+
         $action->execute($class, $student);
 
         return back()->with('success', 'Aluno matriculado com sucesso.');

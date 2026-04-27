@@ -28,14 +28,18 @@ class CreateExerciseListAction
     public function execute(TurmaClass $class, User $creator, array $data): ExerciseList
     {
         return DB::transaction(function () use ($class, $creator, $data) {
-            $exerciseList = ExerciseList::create([
-                'class_id' => $class->id,
-                'created_by' => $creator->id,
-                'title' => $data['title'],
-                'description' => $data['description'] ?? null,
-                'due_date' => $data['due_date'] ?? null,
-                'lesson_id' => $data['lesson_id'] ?? null,
-            ]);
+            // class_id, created_by, lesson_id and school_id are intentionally
+            // outside ExerciseList::$fillable: they fix tenant/ownership and
+            // parent links for the list. This action is the only writer that
+            // may set them.
+            $exerciseList = new ExerciseList;
+            $exerciseList->class_id = $class->id;
+            $exerciseList->created_by = $creator->id;
+            $exerciseList->lesson_id = $data['lesson_id'] ?? null;
+            $exerciseList->title = $data['title'];
+            $exerciseList->description = $data['description'] ?? null;
+            $exerciseList->due_date = $data['due_date'] ?? null;
+            $exerciseList->save();
 
             foreach ($data['exercises'] as $index => $exerciseData) {
                 $exerciseList->exercises()->create([

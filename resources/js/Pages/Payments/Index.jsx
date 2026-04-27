@@ -10,6 +10,9 @@ const methodLabels = { pix: 'PIX', cash: 'Dinheiro', card: 'Cartao', transfer: '
 const formatBRL = (value) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
+const formatMoney = (value, currency = 'BRL') =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: currency ?? 'BRL' }).format(value);
+
 function CubeIcon({ className }) {
     return (
         <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round">
@@ -226,7 +229,7 @@ export default function PaymentsIndex({ student, packages }) {
                                         </div>
                                         <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-gray-500">
                                             {pkg.price != null && (
-                                                <span>Valor: {formatBRL(pkg.price)}</span>
+                                                <span>Valor: {formatMoney(pkg.price, pkg.currency)}</span>
                                             )}
                                             {pkg.purchased_at && (
                                                 <span>Compra: {new Date(pkg.purchased_at).toLocaleDateString('pt-BR')}</span>

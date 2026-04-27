@@ -53,10 +53,10 @@ class UserFactory extends Factory
         ]);
     }
 
-    public function admin(): static
+    public function schoolAdmin(): static
     {
         return $this->state(fn (array $attributes) => [
-            'role' => 'admin',
+            'role' => 'school_admin',
         ]);
     }
 }

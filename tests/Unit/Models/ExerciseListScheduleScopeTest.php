@@ -53,7 +53,10 @@ class ExerciseListScheduleScopeTest extends TestCase
 
         app()->instance('tenant.school_id', $data['school']->id);
 
-        $exerciseList = ExerciseList::create([
+        // class_id and created_by are outside ExerciseList::$fillable; we use
+        // forceCreate so the test exercises the BelongsToSchool creating
+        // event (which auto-fills school_id from the bound tenant).
+        $exerciseList = ExerciseList::forceCreate([
             'class_id' => $data['class']->id,
             'created_by' => $data['professor']->id,
             'title' => 'Homework 1',
@@ -70,13 +73,13 @@ class ExerciseListScheduleScopeTest extends TestCase
         $dataB = $this->createSchoolWithClass();
 
         // Create exercise lists bypassing scope
-        ExerciseList::withoutGlobalScope(SchoolScope::class)->create([
+        ExerciseList::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $dataA['class']->id,
             'created_by' => $dataA['professor']->id,
             'title' => 'List A',
             'school_id' => $dataA['school']->id,
         ]);
-        ExerciseList::withoutGlobalScope(SchoolScope::class)->create([
+        ExerciseList::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $dataB['class']->id,
             'created_by' => $dataB['professor']->id,
             'title' => 'List B',
@@ -98,13 +101,13 @@ class ExerciseListScheduleScopeTest extends TestCase
         $dataA = $this->createSchoolWithClass();
         $dataB = $this->createSchoolWithClass();
 
-        ExerciseList::withoutGlobalScope(SchoolScope::class)->create([
+        ExerciseList::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $dataA['class']->id,
             'created_by' => $dataA['professor']->id,
             'title' => 'List A',
             'school_id' => $dataA['school']->id,
         ]);
-        ExerciseList::withoutGlobalScope(SchoolScope::class)->create([
+        ExerciseList::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $dataB['class']->id,
             'created_by' => $dataB['professor']->id,
             'title' => 'List B',
@@ -124,7 +127,10 @@ class ExerciseListScheduleScopeTest extends TestCase
 
         app()->instance('tenant.school_id', $data['school']->id);
 
-        $schedule = Schedule::create([
+        // class_id is outside Schedule::$fillable; forceCreate exercises the
+        // BelongsToSchool creating event which still auto-fills school_id
+        // from the bound tenant.
+        $schedule = Schedule::forceCreate([
             'class_id' => $data['class']->id,
             'weekday' => 1,
             'start_time' => '14:00',
@@ -142,7 +148,7 @@ class ExerciseListScheduleScopeTest extends TestCase
         $dataA = $this->createSchoolWithClass();
         $dataB = $this->createSchoolWithClass();
 
-        Schedule::withoutGlobalScope(SchoolScope::class)->create([
+        Schedule::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $dataA['class']->id,
             'weekday' => 1,
             'start_time' => '09:00',
@@ -150,7 +156,7 @@ class ExerciseListScheduleScopeTest extends TestCase
             'active' => true,
             'school_id' => $dataA['school']->id,
         ]);
-        Schedule::withoutGlobalScope(SchoolScope::class)->create([
+        Schedule::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $dataB['class']->id,
             'weekday' => 3,
             'start_time' => '10:00',
@@ -174,7 +180,7 @@ class ExerciseListScheduleScopeTest extends TestCase
         $dataA = $this->createSchoolWithClass();
         $dataB = $this->createSchoolWithClass();
 
-        Schedule::withoutGlobalScope(SchoolScope::class)->create([
+        Schedule::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $dataA['class']->id,
             'weekday' => 1,
             'start_time' => '09:00',
@@ -182,7 +188,7 @@ class ExerciseListScheduleScopeTest extends TestCase
             'active' => true,
             'school_id' => $dataA['school']->id,
         ]);
-        Schedule::withoutGlobalScope(SchoolScope::class)->create([
+        Schedule::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $dataB['class']->id,
             'weekday' => 3,
             'start_time' => '10:00',
@@ -206,7 +212,7 @@ class ExerciseListScheduleScopeTest extends TestCase
         // Bind tenant A, but explicitly set school B
         app()->instance('tenant.school_id', $dataA['school']->id);
 
-        $list = ExerciseList::withoutGlobalScope(SchoolScope::class)->create([
+        $list = ExerciseList::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $dataB['class']->id,
             'created_by' => $dataB['professor']->id,
             'title' => 'Explicit School B',
@@ -223,7 +229,7 @@ class ExerciseListScheduleScopeTest extends TestCase
 
         app()->instance('tenant.school_id', $dataA['school']->id);
 
-        $schedule = Schedule::withoutGlobalScope(SchoolScope::class)->create([
+        $schedule = Schedule::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $dataB['class']->id,
             'weekday' => 5,
             'start_time' => '16:00',
@@ -240,7 +246,7 @@ class ExerciseListScheduleScopeTest extends TestCase
         $data = $this->createSchoolWithClass();
 
         // No tenant context, no explicit school_id — should remain null
-        $list = ExerciseList::withoutGlobalScope(SchoolScope::class)->create([
+        $list = ExerciseList::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $data['class']->id,
             'created_by' => $data['professor']->id,
             'title' => 'Orphan List',
@@ -253,7 +259,7 @@ class ExerciseListScheduleScopeTest extends TestCase
     {
         $data = $this->createSchoolWithClass();
 
-        $schedule = Schedule::withoutGlobalScope(SchoolScope::class)->create([
+        $schedule = Schedule::withoutGlobalScope(SchoolScope::class)->forceCreate([
             'class_id' => $data['class']->id,
             'weekday' => 2,
             'start_time' => '08:00',
